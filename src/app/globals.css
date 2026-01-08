@@ -33,6 +33,11 @@
     --ring: 180 100% 35.1%;
 
     --radius: 0.5rem;
+
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   }
 
   .dark {
