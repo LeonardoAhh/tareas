@@ -25,28 +25,28 @@ export const RegisterSchema = z.object({
 });
 
 const TareaBaseSchema = z.object({
-  id: z.string().optional(),
-  userId: z.string().optional(),
-  completed: z.boolean().optional(),
-  estado: z.enum(['pendiente', 'en-progreso', 'completada']).default('pendiente'),
   tarea: z.string().min(1, 'La tarea no puede estar vacía.'),
   prioridad: z.enum(['baja', 'media', 'alta']),
   fechaInicio: z.date(),
   fechaTermino: z.date(),
+  status: z.enum(['pendiente', 'en-progreso', 'completada']).default('pendiente'),
 });
 
-export const TareaSchema = TareaBaseSchema.refine(data => data.fechaTermino >= data.fechaInicio, {
+export const TareaFormSchema = TareaBaseSchema.omit({ status: true }).refine(data => data.fechaTermino >= data.fechaInicio, {
   message: 'La fecha de término no puede ser anterior a la fecha de inicio.',
   path: ['fechaTermino'],
 });
 
-export const TareaFormSchema = TareaBaseSchema.omit({ id: true, userId: true, completed: true }).refine(data => data.fechaTermino >= data.fechaInicio, {
+export const TareaSchema = TareaBaseSchema.extend({
+  id: z.string(),
+  userId: z.string(),
+}).refine(data => data.fechaTermino >= data.fechaInicio, {
   message: 'La fecha de término no puede ser anterior a la fecha de inicio.',
   path: ['fechaTermino'],
 });
-
 
 export type Login = z.infer<typeof LoginSchema>;
 export type Register = z.infer<typeof RegisterSchema>;
 export type Tarea = z.infer<typeof TareaSchema>;
 export type TareaFormValues = z.infer<typeof TareaFormSchema>;
+export type TareaStatus = Tarea['status'];
