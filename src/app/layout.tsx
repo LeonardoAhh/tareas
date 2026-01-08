@@ -5,9 +5,9 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase';
 
 const APP_NAME = "Tareas";
-const APP_DEFAULT_TITLE = "Tareas - Kanban";
+const APP_DEFAULT_TITLE = "Tareas - Organiza tu vida con Kanban";
 const APP_TITLE_TEMPLATE = "%s - Tareas";
-const APP_DESCRIPTION = "Organiza tu vida con tableros Kanban simples y elegantes";
+const APP_DESCRIPTION = "Aplicación web progresiva para gestionar tus tareas con tableros Kanban. Simple, rápida y elegante. Funciona en iOS y Android.";
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
@@ -16,14 +16,33 @@ export const metadata: Metadata = {
     template: APP_TITLE_TEMPLATE,
   },
   description: APP_DESCRIPTION,
+  keywords: ['tareas', 'kanban', 'productividad', 'pwa', 'gestión de tareas', 'organización', 'firebase'],
+  authors: [{ name: 'Leonardo' }],
+  creator: 'Leonardo',
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: APP_DEFAULT_TITLE,
+    title: APP_NAME,
   },
   formatDetection: {
     telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'es_ES',
+    title: APP_DEFAULT_TITLE,
+    description: APP_DESCRIPTION,
+    siteName: APP_NAME,
+  },
+  twitter: {
+    card: 'summary',
+    title: APP_DEFAULT_TITLE,
+    description: APP_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -31,6 +50,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
