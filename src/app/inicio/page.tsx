@@ -335,7 +335,7 @@ export default function InicioPage() {
       onDragStart={(e) => handleDragStart(e, tarea)}
       onDragEnd={handleDragEnd}
       className={cn(
-        "group/card transition-all duration-200 hover:shadow-md hover:scale-[1.01] cursor-move",
+        "glass-card group/card transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-move",
         draggedTask?.id === tarea.id && "opacity-50"
       )}
     >
@@ -535,8 +535,8 @@ export default function InicioPage() {
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, status)}
                 className={cn(
-                  "bg-muted/30 rounded-xl p-4 sm:p-5 border transition-all duration-200",
-                  dragOverColumn === status && "ring-2 ring-primary ring-offset-2 bg-primary/5"
+                  "glass rounded-xl p-4 sm:p-5 transition-all duration-200",
+                  dragOverColumn === status && "ring-2 ring-primary ring-offset-2 bg-primary/10"
                 )}
               >
                 <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b">

@@ -5,74 +5,93 @@
 @layer base {
   :root {
     /* Modern Minimalist Light Theme - Softer, cleaner palette */
-    --background: 0 0% 98%; /* Almost white */
-    --foreground: 240 10% 10%; /* Near black with slight blue tint */
-    
-    --card: 0 0% 100%; /* Pure white */
+    --background: 0 0% 98%;
+    /* Almost white */
+    --foreground: 240 10% 10%;
+    /* Near black with slight blue tint */
+
+    --card: 0 0% 100%;
+    /* Pure white */
     --card-foreground: 240 10% 10%;
-    
+
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 10%;
-    
+
     /* Primary: Modern Teal */
-    --primary: 180 65% 45%; /* Balanced teal */
+    --primary: 180 65% 45%;
+    /* Balanced teal */
     --primary-foreground: 0 0% 100%;
-    
-    --secondary: 240 5% 96%; /* Very light gray */
+
+    --secondary: 240 5% 96%;
+    /* Very light gray */
     --secondary-foreground: 240 10% 10%;
-    
+
     --muted: 240 5% 96%;
     --muted-foreground: 240 4% 45%;
-    
-    --accent: 180 65% 95%; /* Light teal tint */
+
+    --accent: 180 65% 95%;
+    /* Light teal tint */
     --accent-foreground: 180 65% 25%;
-    
+
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --border: 240 6% 90%;
     --input: 240 6% 90%;
     --ring: 180 65% 45%;
-    
+
     --radius: 0.75rem;
-    
+
+    /* Glassmorphism for light mode */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-shadow: rgba(0, 0, 0, 0.1);
+
     /* Safe area insets for PWA */
     --sat: env(safe-area-inset-top);
     --sar: env(safe-area-inset-right);
     --sab: env(safe-area-inset-bottom);
     --sal: env(safe-area-inset-left);
   }
-  
+
   .dark {
     /* Modern Minimalist Dark Theme - Deep but not too harsh */
-    --background: 240 10% 8%; /* Dark blue-gray */
+    --background: 240 10% 8%;
+    /* Dark blue-gray */
     --foreground: 0 0% 98%;
-    
-    --card: 240 8% 12%; /* Slightly lighter than background */
+
+    --card: 240 8% 12%;
+    /* Slightly lighter than background */
     --card-foreground: 0 0% 98%;
-    
+
     --popover: 240 8% 12%;
     --popover-foreground: 0 0% 98%;
-    
+
     /* Primary: Brighter teal for dark mode */
     --primary: 180 75% 50%;
     --primary-foreground: 240 10% 8%;
-    
+
     --secondary: 240 6% 18%;
     --secondary-foreground: 0 0% 98%;
-    
+
     --muted: 240 6% 18%;
     --muted-foreground: 240 5% 60%;
-    
-    --accent: 180 30% 20%; /* Dark teal tint */
+
+    --accent: 180 30% 20%;
+    /* Dark teal tint */
     --accent-foreground: 180 75% 70%;
-    
-    --destructive:0 62% 50%;
+
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --border: 240 6% 20%;
     --input: 240 6% 20%;
     --ring: 180 75% 50%;
+
+    /* Glassmorphism for dark mode */
+    --glass-bg: rgba(30, 30, 40, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -80,15 +99,43 @@
   * {
     @apply border-border;
   }
-  
+
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
+
   /* Smooth scrolling for better UX */
   html {
     scroll-behavior: smooth;
+  }
+}
+
+/* =================================================== 
+   GLASSMORPHISM UTILITIES
+   ================================================ */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px 0 var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px) saturate(160%);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 16px 0 var(--glass-shadow);
+  }
+
+  .glass-subtle {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid var(--glass-border);
   }
 }
 
@@ -321,22 +368,23 @@
   .safe-top {
     padding-top: env(safe-area-inset-top);
   }
-  
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
-  
+
   .safe-left {
     padding-left: env(safe-area-inset-left);
   }
-  
+
   .safe-right {
     padding-right: env(safe-area-inset-right);
   }
 }
 
 /* Prevent iOS bounce scroll */
-html, body {
+html,
+body {
   overscroll-behavior-y: contain;
 }
 
