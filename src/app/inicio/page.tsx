@@ -243,10 +243,12 @@ export default function InicioPage() {
 
         <Accordion type="single" collapsible className="w-full">
           <AccordionItem value="item-1">
-            <AccordionTrigger>
-              <Button>
+            <AccordionTrigger className={cn(
+                'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+                'bg-primary text-primary-foreground hover:bg-primary/90',
+                'h-10 px-4 py-2'
+              )}>
                 <Plus className="mr-2 h-4 w-4" /> Agregar Nueva Tarea
-              </Button>
             </AccordionTrigger>
             <AccordionContent>
               <Card className="mt-4 border-primary/20 shadow-xl shadow-primary/5">
