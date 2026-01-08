@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Tarea } from '@/lib/schemas';
+import { Tarea, TareaFormValues } from '@/lib/schemas';
 import { TareaForm } from '@/components/tarea-form';
 import {
   useCollection,
@@ -57,12 +57,12 @@ export default function InicioPage() {
 
   const { data: tareas, isLoading: isLoadingTasks } = useCollection<TareaFirestore>(tasksCollection);
 
-  const agregarTarea = (nuevaTarea: Omit<Tarea, 'id'>) => {
-    if (!tasksCollection) return;
+  const agregarTarea = (nuevaTarea: TareaFormValues) => {
+    if (!tasksCollection || !user) return;
 
     const tareaParaGuardar = {
       ...nuevaTarea,
-      userId: user?.uid,
+      userId: user.uid,
       completed: false,
     };
     addDocumentNonBlocking(tasksCollection, tareaParaGuardar);

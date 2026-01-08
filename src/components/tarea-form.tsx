@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TareaSchema, Tarea } from '@/lib/schemas';
+import { TareaFormSchema, Tarea, TareaFormValues } from '@/lib/schemas';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -32,14 +32,14 @@ import { cn } from '@/lib/utils';
 import { es } from 'date-fns/locale';
 
 interface TareaFormProps {
-  onSubmit: (data: Omit<Tarea, 'id'>) => void;
+  onSubmit: (data: TareaFormValues) => void;
   onCancel?: () => void;
   tareaInicial?: Tarea;
 }
 
 export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) {
-  const form = useForm<Omit<Tarea, 'id'>>({
-    resolver: zodResolver(TareaSchema.omit({ id: true })),
+  const form = useForm<TareaFormValues>({
+    resolver: zodResolver(TareaFormSchema),
     defaultValues: tareaInicial ? {
       ...tareaInicial,
       fechaInicio: new Date(tareaInicial.fechaInicio),
@@ -52,7 +52,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     },
   });
 
-  const handleSubmit = (data: Omit<Tarea, 'id'>) => {
+  const handleSubmit = (data: TareaFormValues) => {
     onSubmit(data);
     form.reset({
       tarea: '',
