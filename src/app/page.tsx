@@ -1,32 +1,38 @@
 import { LoginForm } from '@/components/login-form';
 import { ThemeToggle } from '@/components/theme-toggle';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Mountain } from 'lucide-react';
-import Link from 'next/link';
+import { CheckCircle2 } from 'lucide-react';
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-dvh p-[calc(1rem+var(--sal))] sm:p-[calc(1.5rem+var(--sal))] md:p-[calc(2rem+var(--sal))]">
-      <div className="absolute top-4 right-4 md:top-6 md:right-6" style={{ right: 'calc(1rem + var(--sar))', top: 'calc(1rem + var(--sat))' }}>
+    <main className="relative min-h-dvh flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 safe-top safe-bottom safe-left safe-right">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50 safe-top safe-right">
         <ThemeToggle />
       </div>
-      <Card className="w-full max-w-md shadow-2xl bg-card">
-        <CardHeader className="space-y-2 text-center">
-          <div className="inline-flex items-center justify-center gap-2 mb-4">
-            <Mountain className="h-8 w-8 text-primary" />
-            <span className="text-3xl font-bold font-headline">LoginZen</span>
+
+      {/* Main Content */}
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8 space-y-2">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4 ring-2 ring-primary/20">
+            <CheckCircle2 className="h-8 w-8 text-primary" />
           </div>
-        </CardHeader>
-        <CardContent>
+          <h1 className="text-3xl font-bold tracking-tight">Tareas</h1>
+          <p className="text-sm text-muted-foreground">
+            Organiza tu vida con tableros Kanban
+          </p>
+        </div>
+
+        {/* Login Card */}
+        <div className="bg-card border border-border rounded-2xl shadow-xl shadow-black/5 p-8">
           <LoginForm />
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Diseñado para simplicidad y productividad
+        </p>
+      </div>
     </main>
   );
 }

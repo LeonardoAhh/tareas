@@ -2,7 +2,6 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +14,6 @@ import {
 import {
   useAuth,
   initiateEmailSignIn,
-  initiateAnonymousSignIn,
   initiateEmailSignUp,
 } from '@/firebase';
 import { Button } from '@/components/ui/button';
@@ -29,7 +27,6 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { FirebaseError } from 'firebase/app';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function LoginForm() {
@@ -60,8 +57,9 @@ export function LoginForm() {
     startTransition(() => {
       initiateEmailSignIn(auth, values.email, values.password);
       toast({
-        title: 'Iniciando Sesión...',
-        description: 'Serás redirigido en un momento.',
+        title: '✓ Iniciando sesión',
+        description: 'Bienvenido de vuelta',
+        duration: 2000,
       });
       router.push('/inicio');
     });
@@ -72,153 +70,92 @@ export function LoginForm() {
       const { email, password, firstName, lastName } = values;
       initiateEmailSignUp(auth, email, password, { firstName, lastName });
       toast({
-        title: 'Creando cuenta...',
-        description:
-          'Tu cuenta se está creando. Serás redirigido en un momento.',
+        title: '✓ Cuenta creada',
+        description: 'Tu cuenta ha sido creada exitosamente',
+        duration: 2000,
       });
       router.push('/inicio');
     });
   };
 
-  const handleAnonymousLogin = () => {
-    startTransition(() => {
-      try {
-        initiateAnonymousSignIn(auth);
-        toast({
-          title: 'Iniciando como Anónimo',
-          description: 'Serás redirigido en un momento.',
-        });
-        router.push('/inicio');
-      } catch (error) {
-        if (error instanceof FirebaseError) {
-          toast({
-            title: 'Error de Autenticación',
-            description: error.message,
-            variant: 'destructive',
-          });
-        }
-      }
-    });
-  };
-
   return (
     <Tabs defaultValue="login" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-2 mb-6">
         <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-        <TabsTrigger value="register">Crear Cuenta</TabsTrigger>
+        <TabsTrigger value="register">Registrarse</TabsTrigger>
       </TabsList>
-      <TabsContent value="login">
-        <p className="text-sm text-muted-foreground text-center my-4">
-          Ingresa tus credenciales para acceder a tu cuenta.
-        </p>
+
+      <TabsContent value="login" className="space-y-4">
         <Form {...loginForm}>
           <form
             onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-            className="space-y-6"
+            className="space-y-4"
           >
-            <div className="space-y-4">
-              <FormField
-                control={loginForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="nombre@ejemplo.com"
-                        {...field}
-                        type="email"
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={loginForm.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="••••••••"
-                        {...field}
-                        type="password"
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <FormField
+              control={loginForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="tu@email.com"
+                      {...field}
+                      type="email"
+                      disabled={isPending}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={loginForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="••••••••"
+                      {...field}
+                      type="password"
+                      disabled={isPending}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full h-11" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Iniciar Sesión
             </Button>
           </form>
         </Form>
       </TabsContent>
-      <TabsContent value="register">
-        <p className="text-sm text-muted-foreground text-center my-4">
-          Crea una nueva cuenta para empezar a usar la aplicación.
-        </p>
+
+      <TabsContent value="register" className="space-y-4">
         <Form {...registerForm}>
           <form
             onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
-            className="space-y-6"
+            className="space-y-4"
           >
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={registerForm.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Juan"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={registerForm.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Apellido</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Pérez"
-                          {...field}
-                          disabled={isPending}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={registerForm.control}
-                name="email"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Correo Electrónico</FormLabel>
+                    <FormLabel>Nombre</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="nombre@ejemplo.com"
+                        placeholder="Juan"
                         {...field}
-                        type="email"
                         disabled={isPending}
+                        className="h-11"
                       />
                     </FormControl>
                     <FormMessage />
@@ -227,16 +164,16 @@ export function LoginForm() {
               />
               <FormField
                 control={registerForm.control}
-                name="password"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
+                    <FormLabel>Apellido</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="••••••••"
+                        placeholder="Pérez"
                         {...field}
-                        type="password"
                         disabled={isPending}
+                        className="h-11"
                       />
                     </FormControl>
                     <FormMessage />
@@ -244,33 +181,51 @@ export function LoginForm() {
                 )}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <FormField
+              control={registerForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="tu@email.com"
+                      {...field}
+                      type="email"
+                      disabled={isPending}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={registerForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="••••••••"
+                      {...field}
+                      type="password"
+                      disabled={isPending}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full h-11" disabled={isPending}>
               {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Crear Cuenta
             </Button>
           </form>
         </Form>
       </TabsContent>
-      <div className="relative mt-6">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">
-            O continuar con
-          </span>
-        </div>
-      </div>
-      <Button
-        type="button"
-        variant="secondary"
-        className="w-full mt-6"
-        onClick={handleAnonymousLogin}
-        disabled={isPending}
-      >
-        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Acceso Anónimo
-      </Button>
     </Tabs>
   );
 }
