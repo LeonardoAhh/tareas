@@ -27,29 +27,29 @@ const tareasIniciales: Tarea[] = [
     id: '1',
     tarea: 'Diseñar la nueva página de inicio',
     prioridad: 'alta',
-    fechaInicio: new Date('2024-07-28'),
-    fechaTermino: new Date('2024-08-05'),
+    fechaInicio: new Date(2024, 6, 28), // Julio es el mes 6
+    fechaTermino: new Date(2024, 7, 5), // Agosto es el mes 7
   },
   {
     id: '2',
     tarea: 'Implementar la autenticación de usuarios',
     prioridad: 'alta',
-    fechaInicio: new Date('2024-08-01'),
-    fechaTermino: new Date('2024-08-15'),
+    fechaInicio: new Date(2024, 7, 1),
+    fechaTermino: new Date(2024, 7, 15),
   },
   {
     id: '3',
     tarea: 'Actualizar las dependencias del proyecto',
     prioridad: 'media',
-    fechaInicio: new Date('2024-07-29'),
-    fechaTermino: new Date('2024-07-31'),
+    fechaInicio: new Date(2024, 6, 29),
+    fechaTermino: new Date(2024, 6, 31),
   },
   {
     id: '4',
     tarea: 'Corregir error en el formulario de contacto',
     prioridad: 'baja',
-    fechaInicio: new Date('2024-07-28'),
-    fechaTermino: new Date('2024-07-29'),
+    fechaInicio: new Date(2024, 6, 28),
+    fechaTermino: new Date(2024, 6, 29),
   },
 ];
 
