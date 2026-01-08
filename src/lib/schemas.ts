@@ -9,6 +9,21 @@ export const LoginSchema = z.object({
   }),
 });
 
+export const RegisterSchema = z.object({
+  email: z.string().email({
+    message: 'Por favor, introduce una dirección de correo electrónico válida.',
+  }),
+  password: z.string().min(8, {
+    message: 'La contraseña debe tener al menos 8 caracteres.',
+  }),
+  firstName: z.string().min(1, {
+    message: 'Por favor, introduce tu nombre.',
+  }),
+  lastName: z.string().min(1, {
+    message: 'Por favor, introduce tu apellido.',
+  }),
+});
+
 export const TareaSchema = z.object({
   id: z.string().optional(),
   userId: z.string().optional(),
@@ -22,4 +37,6 @@ export const TareaSchema = z.object({
   path: ['fechaTermino'],
 });
 
+export type Login = z.infer<typeof LoginSchema>;
+export type Register = z.infer<typeof RegisterSchema>;
 export type Tarea = z.infer<typeof TareaSchema>;
