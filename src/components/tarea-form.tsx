@@ -20,16 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { es } from 'date-fns/locale';
 
 interface TareaFormProps {
   onSubmit: (data: TareaFormValues) => void;
@@ -64,18 +54,26 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     });
   };
 
+  // Helper para convertir Date a string formato YYYY-MM-DD
+  const formatDateForInput = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6"
+        className="space-y-4 sm:space-y-6"
       >
         <FormField
           control={form.control}
           name="tarea"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Descripción de la Tarea</FormLabel>
+              <FormLabel>Descripción</FormLabel>
               <FormControl>
                 <Input placeholder="Ej: Implementar nueva función..." {...field} />
               </FormControl>
@@ -83,7 +81,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           <FormField
             control={form.control}
             name="prioridad"
@@ -97,7 +95,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecciona una prioridad" />
+                      <SelectValue placeholder="Prioridad" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -114,38 +112,19 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
             control={form.control}
             name="fechaInicio"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Fecha de Inicio</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'PPP', { locale: es })
-                        ) : (
-                          <span>Elige una fecha</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date('1900-01-01')}
-                      initialFocus
-                      locale={es}
-                    />
-                  </PopoverContent>
-                </Popover>
+              <FormItem>
+                <FormLabel>Fecha Inicio</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value ? formatDateForInput(field.value) : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value + 'T00:00:00') : new Date();
+                      field.onChange(date);
+                    }}
+                    className="w-full"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -154,48 +133,29 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
             control={form.control}
             name="fechaTermino"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Fecha de Término</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-full pl-3 text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, 'PPP', { locale: es })
-                        ) : (
-                          <span>Elige una fecha</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => date < new Date('1900-01-01')}
-                      initialFocus
-                      locale={es}
-                    />
-                  </PopoverContent>
-                </Popover>
+              <FormItem>
+                <FormLabel>Fecha Término</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value ? formatDateForInput(field.value) : ''}
+                    onChange={(e) => {
+                      const date = e.target.value ? new Date(e.target.value + 'T00:00:00') : new Date();
+                      field.onChange(date);
+                    }}
+                    className="w-full"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-2 sm:gap-4 pt-2">
           {onCancel && <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>}
-          <Button type="submit">Guardar Tarea</Button>
+          <Button type="submit">Guardar</Button>
         </div>
       </form>
     </Form>
