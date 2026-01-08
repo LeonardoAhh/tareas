@@ -47,6 +47,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     } : {
       tarea: '',
       prioridad: 'media',
+      estado: 'pendiente',
       fechaInicio: new Date(),
       fechaTermino: new Date(),
     },
@@ -57,6 +58,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     form.reset({
       tarea: '',
       prioridad: 'media',
+      estado: 'pendiente',
       fechaInicio: new Date(),
       fechaTermino: new Date(),
     });

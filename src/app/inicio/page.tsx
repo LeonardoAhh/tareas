@@ -1,54 +1,39 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
 import { Tarea, TareaFormValues } from '@/lib/schemas';
 import { TareaForm } from '@/components/tarea-form';
+import { KanbanColumn } from '@/components/kanban-column';
 import {
-  useCollection,
   useFirebase,
   useMemoFirebase,
   useUser,
   addDocumentNonBlocking,
+  useCollection,
+  updateDocumentNonBlocking,
+  deleteDocumentNonBlocking,
 } from '@/firebase';
-import { collection, Timestamp } from 'firebase/firestore';
+import { collection, Timestamp, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ListTodo, LoaderCircle, CheckCircle2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
   fechaTermino: Timestamp;
 };
 
-const prioridadVariant: Record<Tarea['prioridad'], 'destructive' | 'secondary' | 'default'> = {
-  alta: 'destructive',
-  media: 'secondary',
-  baja: 'default',
-}
-
-const prioridadTexto: Record<Tarea['prioridad'], string> = {
-  alta: 'Alta',
-  media: 'Media',
-  baja: 'Baja',
-}
-
 export default function InicioPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const [showForm, setShowForm] = useState(false);
 
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -66,89 +51,181 @@ export default function InicioPage() {
       completed: false,
     };
     addDocumentNonBlocking(tasksCollection, tareaParaGuardar);
+    setShowForm(false);
   };
-  
+
   const formattedTareas = useMemo(() => {
     return tareas?.map(tarea => ({
       ...tarea,
       fechaInicio: tarea.fechaInicio.toDate(),
       fechaTermino: tarea.fechaTermino.toDate(),
+      estado: (tarea.estado || 'pendiente') as Tarea['estado'], // Default to 'pendiente' for existing tasks
     })) || [];
   }, [tareas]);
 
+  const tareasPorEstado = useMemo(() => {
+    return {
+      pendiente: formattedTareas.filter(t => t.estado === 'pendiente'),
+      'en-progreso': formattedTareas.filter(t => t.estado === 'en-progreso'),
+      completada: formattedTareas.filter(t => t.estado === 'completada'),
+    };
+  }, [formattedTareas]);
+
+  const handleTaskDrop = (taskId: string, newEstado: Tarea['estado']) => {
+    if (!tasksCollection || !firestore || !user) return;
+
+    const taskRef = doc(firestore, 'users', user.uid, 'tasks', taskId);
+    updateDocumentNonBlocking(taskRef, { estado: newEstado });
+  };
+
+  const handleTaskMove = (taskId: string, newEstado: Tarea['estado']) => {
+    if (!tasksCollection || !firestore || !user) return;
+
+    const taskRef = doc(firestore, 'users', user.uid, 'tasks', taskId);
+    updateDocumentNonBlocking(taskRef, { estado: newEstado });
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    if (!tasksCollection || !firestore || !user) return;
+
+    const taskRef = doc(firestore, 'users', user.uid, 'tasks', taskId);
+    deleteDocumentNonBlocking(taskRef);
+  };
+
   const renderSkeleton = () => (
-    <TableRow>
-      <TableCell colSpan={5}>
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-3/4" />
-          <Skeleton className="h-6 w-1/2" />
-        </div>
-      </TableCell>
-    </TableRow>
+    <div className="space-y-3">
+      <Skeleton className="h-32 w-full rounded-lg" />
+      <Skeleton className="h-32 w-full rounded-lg" />
+      <Skeleton className="h-32 w-full rounded-lg" />
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
-      <Card className="mx-auto max-w-7xl">
-        <CardHeader>
-          <CardTitle className="text-2xl">Mis Pendientes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-8">
-            <TareaForm onSubmit={agregarTarea} />
-          </div>
-          
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tarea</TableHead>
-                  <TableHead className="hidden sm:table-cell">Prioridad</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha de Inicio</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha de Término</TableHead>
-                  <TableHead className="sm:hidden">Detalles</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isUserLoading || isLoadingTasks ? (
-                  renderSkeleton()
-                ) : formattedTareas.length > 0 ? (
-                  formattedTareas.map((tarea) => (
-                    <TableRow key={tarea.id}>
-                      <TableCell className="font-medium">{tarea.tarea}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant={prioridadVariant[tarea.prioridad]}>
-                          {prioridadTexto[tarea.prioridad]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{format(tarea.fechaInicio, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell className="hidden md:table-cell">{format(tarea.fechaTermino, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell className="sm:hidden">
-                        <div className="flex flex-col gap-2 text-sm">
-                          <div>
-                            <Badge variant={prioridadVariant[tarea.prioridad]} className="mb-1">
-                              {prioridadTexto[tarea.prioridad]}
-                            </Badge>
-                          </div>
-                          <div><strong>Inicio:</strong> {format(tarea.fechaInicio, 'dd/MM/yy')}</div>
-                          <div><strong>Fin:</strong> {format(tarea.fechaTermino, 'dd/MM/yy')}</div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Header */}
+      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <ListTodo className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Mis Tareas</h1>
+                <p className="text-sm text-muted-foreground">
+                  {formattedTareas.length} {formattedTareas.length === 1 ? 'tarea' : 'tareas'} en total
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowForm(!showForm)}
+                className="gap-2"
+                variant={showForm ? "secondary" : "default"}
+              >
+                {showForm ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Ocultar
+                  </>
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      Aún no tienes tareas. ¡Agrega una!
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <Plus className="h-4 w-4" />
+                    Nueva Tarea
+                  </>
                 )}
-              </TableBody>
-            </Table>
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Task Form */}
+        {showForm && (
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+            <TareaForm
+              onSubmit={agregarTarea}
+              onCancel={() => setShowForm(false)}
+            />
+          </div>
+        )}
+
+        {/* Kanban Board */}
+        {isUserLoading || isLoadingTasks ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>{renderSkeleton()}</CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>{renderSkeleton()}</CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>{renderSkeleton()}</CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Pendientes Column */}
+            <Card className="bg-card/50 backdrop-blur-sm border-t-4 border-t-blue-500">
+              <CardContent className="p-6">
+                <KanbanColumn
+                  title="Pendientes"
+                  estado="pendiente"
+                  tareas={tareasPorEstado.pendiente}
+                  onTaskDrop={handleTaskDrop}
+                  onTaskMove={handleTaskMove}
+                  onTaskDelete={handleTaskDelete}
+                  colorClass="border-blue-500"
+                  icon={<ListTodo className="h-5 w-5 text-blue-500" />}
+                />
+              </CardContent>
+            </Card>
+
+            {/* En Progreso Column */}
+            <Card className="bg-card/50 backdrop-blur-sm border-t-4 border-t-yellow-500">
+              <CardContent className="p-6">
+                <KanbanColumn
+                  title="En Progreso"
+                  estado="en-progreso"
+                  tareas={tareasPorEstado['en-progreso']}
+                  onTaskDrop={handleTaskDrop}
+                  onTaskMove={handleTaskMove}
+                  onTaskDelete={handleTaskDelete}
+                  colorClass="border-yellow-500"
+                  icon={<LoaderCircle className="h-5 w-5 text-yellow-500" />}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Completadas Column */}
+            <Card className="bg-card/50 backdrop-blur-sm border-t-4 border-t-green-500">
+              <CardContent className="p-6">
+                <KanbanColumn
+                  title="Completadas"
+                  estado="completada"
+                  tareas={tareasPorEstado.completada}
+                  onTaskDrop={handleTaskDrop}
+                  onTaskMove={handleTaskMove}
+                  onTaskDelete={handleTaskDelete}
+                  colorClass="border-green-500"
+                  icon={<CheckCircle2 className="h-5 w-5 text-green-500" />}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

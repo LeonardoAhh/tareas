@@ -28,6 +28,7 @@ const TareaBaseSchema = z.object({
   id: z.string().optional(),
   userId: z.string().optional(),
   completed: z.boolean().optional(),
+  estado: z.enum(['pendiente', 'en-progreso', 'completada']).default('pendiente'),
   tarea: z.string().min(1, 'La tarea no puede estar vacía.'),
   prioridad: z.enum(['baja', 'media', 'alta']),
   fechaInicio: z.date(),
