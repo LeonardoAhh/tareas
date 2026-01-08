@@ -50,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PulsatingButton } from '@/components/ui/pulsating-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
 
@@ -429,15 +430,15 @@ export default function InicioPage() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
-              <Button
-                variant="ghost"
-                size="icon"
+              <PulsatingButton
                 onClick={handleLogout}
-                className="h-9 w-9 sm:h-10 sm:w-10 hover:bg-destructive/10 hover:text-destructive"
+                className="h-9 w-9 sm:h-10 sm:w-10 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg p-0"
                 title="Cerrar sesión"
+                pulseColor="rgba(239, 68, 68, 0.4)"
+                duration="2s"
               >
                 <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+              </PulsatingButton>
             </div>
           </div>
 

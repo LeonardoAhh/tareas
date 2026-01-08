@@ -137,6 +137,23 @@
     -webkit-backdrop-filter: blur(8px) saturate(140%);
     border: 1px solid var(--glass-border);
   }
+
+  /* Pulsating Button Animation */
+  .animate-pulse {
+    animation: pulse var(--duration, 1.5s) ease-out infinite;
+  }
+
+  @keyframes pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 var(--pulse-color, rgba(128, 128, 128, 0.7));
+    }
+
+    50% {
+      box-shadow: 0 0 0 8px var(--pulse-color, rgba(128, 128, 128, 0));
+    }
+  }
 }
 
 /* =================================================== 
