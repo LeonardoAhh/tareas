@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -54,6 +54,8 @@ import { PulsatingButton } from '@/components/ui/pulsating-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
 import { triggerConfetti } from '@/lib/confetti';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -92,6 +94,8 @@ export default function InicioPage() {
   const [filterPriority, setFilterPriority] = useState<'all' | 'alta' | 'media' | 'baja'>('all');
   const [draggedTask, setDraggedTask] = useState<Tarea | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<TareaStatus | null>(null);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -237,6 +241,36 @@ export default function InicioPage() {
     setSearchTerm('');
     setFilterPriority('all');
   };
+
+  // Keyboard Shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      callback: () => {
+        const accordionTrigger = document.querySelector('[data-state]') as HTMLButtonElement;
+        if (accordionTrigger) {
+          accordionTrigger.click();
+        }
+      },
+      description: 'Nueva tarea',
+    },
+    {
+      key: '/',
+      callback: () => {
+        searchInputRef.current?.focus();
+      },
+      description: 'Buscar tareas',
+    },
+    {
+      key: '?',
+      shiftKey: true,
+      callback: () => {
+        setShowShortcutsModal((prev) => !prev);
+      },
+      description: 'Mostrar ayuda',
+    },
+  ]);
+
 
   // Drag & Drop Handlers
   const handleDragStart = (e: React.DragEvent, tarea: Tarea) => {
@@ -458,6 +492,7 @@ export default function InicioPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 type="text"
                 placeholder="Buscar tareas..."
                 value={searchTerm}
@@ -574,6 +609,12 @@ export default function InicioPage() {
           )}
         </div>
       </main>
+
+      {/* Keyboard Shortcuts Modal */}
+      <KeyboardShortcutsModal
+        open={showShortcutsModal}
+        onOpenChange={setShowShortcutsModal}
+      />
     </div>
   );
 }
