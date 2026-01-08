@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -20,38 +19,20 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Tarea } from '@/lib/schemas';
 import { TareaForm } from '@/components/tarea-form';
-import { PlusCircle } from 'lucide-react';
+import {
+  useCollection,
+  useFirebase,
+  useMemoFirebase,
+  useUser,
+  addDocumentNonBlocking,
+} from '@/firebase';
+import { collection, Timestamp } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const tareasIniciales: Tarea[] = [
-  {
-    id: '1',
-    tarea: 'Diseñar la nueva página de inicio',
-    prioridad: 'alta',
-    fechaInicio: new Date('2024-07-28T12:00:00Z'),
-    fechaTermino: new Date('2024-08-05T12:00:00Z'),
-  },
-  {
-    id: '2',
-    tarea: 'Implementar la autenticación de usuarios',
-    prioridad: 'alta',
-    fechaInicio: new Date('2024-08-01T12:00:00Z'),
-    fechaTermino: new Date('2024-08-15T12:00:00Z'),
-  },
-  {
-    id: '3',
-    tarea: 'Actualizar las dependencias del proyecto',
-    prioridad: 'media',
-    fechaInicio: new Date('2024-07-29T12:00:00Z'),
-    fechaTermino: new Date('2024-07-31T12:00:00Z'),
-  },
-  {
-    id: '4',
-    tarea: 'Corregir error en el formulario de contacto',
-    prioridad: 'baja',
-    fechaInicio: new Date('2024-07-28T12:00:00Z'),
-    fechaTermino: new Date('2024-07-29T12:00:00Z'),
-  },
-];
+type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
+  fechaInicio: Timestamp;
+  fechaTermino: Timestamp;
+};
 
 const prioridadVariant: Record<Tarea['prioridad'], 'destructive' | 'secondary' | 'default'> = {
   alta: 'destructive',
@@ -66,31 +47,58 @@ const prioridadTexto: Record<Tarea['prioridad'], string> = {
 }
 
 export default function InicioPage() {
-  const [tareas, setTareas] = useState<Tarea[]>(tareasIniciales);
-  const [showForm, setShowForm] = useState(false);
+  const { firestore } = useFirebase();
+  const { user, isUserLoading } = useUser();
+
+  const tasksCollection = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, 'users', user.uid, 'tasks');
+  }, [firestore, user]);
+
+  const { data: tareas, isLoading: isLoadingTasks } = useCollection<TareaFirestore>(tasksCollection);
 
   const agregarTarea = (nuevaTarea: Omit<Tarea, 'id'>) => {
-    const tareaConId: Tarea = { ...nuevaTarea, id: Date.now().toString() };
-    setTareas(prev => [...prev, tareaConId]);
-    setShowForm(false);
+    if (!tasksCollection) return;
+
+    const tareaParaGuardar = {
+      ...nuevaTarea,
+      userId: user?.uid,
+      completed: false,
+    };
+    addDocumentNonBlocking(tasksCollection, tareaParaGuardar);
   };
+  
+  const formattedTareas = useMemo(() => {
+    return tareas?.map(tarea => ({
+      ...tarea,
+      fechaInicio: tarea.fechaInicio.toDate(),
+      fechaTermino: tarea.fechaTermino.toDate(),
+    })) || [];
+  }, [tareas]);
+
+  const renderSkeleton = () => (
+    <TableRow>
+      <TableCell colSpan={5}>
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-6 w-1/2" />
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
       <Card className="mx-auto max-w-7xl">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <CardHeader>
           <CardTitle className="text-2xl">Mis Pendientes</CardTitle>
-          <Button onClick={() => setShowForm(true)} className="w-full sm:w-auto">
-            <PlusCircle className="mr-2" />
-            Agregar Tarea
-          </Button>
         </CardHeader>
         <CardContent>
-          {showForm && (
-            <div className="mb-8">
-              <TareaForm onSubmit={agregarTarea} onCancel={() => setShowForm(false)} />
-            </div>
-          )}
+          <div className="mb-8">
+            <TareaForm onSubmit={agregarTarea} />
+          </div>
+          
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -103,29 +111,39 @@ export default function InicioPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tareas.map((tarea) => (
-                  <TableRow key={tarea.id}>
-                    <TableCell className="font-medium">{tarea.tarea}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant={prioridadVariant[tarea.prioridad]}>
-                        {prioridadTexto[tarea.prioridad]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">{format(tarea.fechaInicio, 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="hidden md:table-cell">{format(tarea.fechaTermino, 'dd/MM/yyyy')}</TableCell>
-                    <TableCell className="sm:hidden">
-                      <div className="flex flex-col gap-2 text-sm">
-                        <div>
-                           <Badge variant={prioridadVariant[tarea.prioridad]} className="mb-1">
-                            {prioridadTexto[tarea.prioridad]}
-                          </Badge>
+                {isUserLoading || isLoadingTasks ? (
+                  renderSkeleton()
+                ) : formattedTareas.length > 0 ? (
+                  formattedTareas.map((tarea) => (
+                    <TableRow key={tarea.id}>
+                      <TableCell className="font-medium">{tarea.tarea}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <Badge variant={prioridadVariant[tarea.prioridad]}>
+                          {prioridadTexto[tarea.prioridad]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{format(tarea.fechaInicio, 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="hidden md:table-cell">{format(tarea.fechaTermino, 'dd/MM/yyyy')}</TableCell>
+                      <TableCell className="sm:hidden">
+                        <div className="flex flex-col gap-2 text-sm">
+                          <div>
+                            <Badge variant={prioridadVariant[tarea.prioridad]} className="mb-1">
+                              {prioridadTexto[tarea.prioridad]}
+                            </Badge>
+                          </div>
+                          <div><strong>Inicio:</strong> {format(tarea.fechaInicio, 'dd/MM/yy')}</div>
+                          <div><strong>Fin:</strong> {format(tarea.fechaTermino, 'dd/MM/yy')}</div>
                         </div>
-                        <div><strong>Inicio:</strong> {format(tarea.fechaInicio, 'dd/MM/yy')}</div>
-                        <div><strong>Fin:</strong> {format(tarea.fechaTermino, 'dd/MM/yy')}</div>
-                      </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">
+                      Aún no tienes tareas. ¡Agrega una!
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </div>

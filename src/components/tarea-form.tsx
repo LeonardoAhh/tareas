@@ -33,7 +33,7 @@ import { es } from 'date-fns/locale';
 
 interface TareaFormProps {
   onSubmit: (data: Omit<Tarea, 'id'>) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   tareaInicial?: Tarea;
 }
 
@@ -54,7 +54,12 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
 
   const handleSubmit = (data: Omit<Tarea, 'id'>) => {
     onSubmit(data);
-    form.reset();
+    form.reset({
+      tarea: '',
+      prioridad: 'media',
+      fechaInicio: new Date(),
+      fechaTermino: new Date(),
+    });
   };
 
   return (
@@ -86,6 +91,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -184,9 +190,9 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
           />
         </div>
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          {onCancel && <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
-          </Button>
+          </Button>}
           <Button type="submit">Guardar Tarea</Button>
         </div>
       </form>

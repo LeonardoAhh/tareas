@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/components/theme-provider';
+import { FirebaseClientProvider } from '@/firebase';
 
 const APP_NAME = "LoginZen";
 const APP_DEFAULT_TITLE = "LoginZen";
@@ -46,10 +47,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#333333" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="font-body antialiased">
-        <ThemeProvider>
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <FirebaseClientProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

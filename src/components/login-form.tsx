@@ -9,7 +9,11 @@ import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { LoginSchema } from '@/lib/schemas';
-import { login } from '@/app/actions';
+import {
+  useAuth,
+  initiateEmailSignIn,
+  initiateAnonymousSignIn,
+} from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,9 +25,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { FirebaseError } from 'firebase/app';
 
 export function LoginForm() {
   const router = useRouter();
+  const auth = useAuth();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -37,22 +43,36 @@ export function LoginForm() {
 
   const onSubmit = (values: z.infer<typeof LoginSchema>) => {
     startTransition(() => {
-      login(values).then((data) => {
-        if (data.error) {
-          toast({
-            title: 'Inicio de Sesión Fallido',
-            description: data.error,
+      initiateEmailSignIn(auth, values.email, values.password);
+      // We can't await the result here in the non-blocking pattern.
+      // We rely on the onAuthStateChanged listener in the provider to redirect.
+      // Let's assume for now a toast is enough and we will handle redirection globally.
+      toast({
+        title: 'Iniciando Sesión...',
+        description: 'Serás redirigido en un momento.',
+      });
+       router.push('/inicio');
+    });
+  };
+  
+  const handleAnonymousLogin = () => {
+    startTransition(() => {
+      try {
+        initiateAnonymousSignIn(auth);
+        toast({
+          title: 'Iniciando como Anónimo',
+          description: 'Serás redirigido en un momento.',
+        });
+        router.push('/inicio');
+      } catch (error) {
+        if (error instanceof FirebaseError) {
+           toast({
+            title: 'Error de Autenticación',
+            description: error.message,
             variant: 'destructive',
           });
         }
-        if (data.success) {
-          toast({
-            title: 'Inicio de Sesión Exitoso',
-            description: data.success,
-          });
-          router.push('/inicio');
-        }
-      });
+      }
     });
   };
 
@@ -108,6 +128,16 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Iniciar Sesión
+        </Button>
+         <Button
+          type="button"
+          variant="secondary"
+          className="w-full"
+          onClick={handleAnonymousLogin}
+          disabled={isPending}
+        >
+          {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Continuar como Anónimo
         </Button>
       </form>
     </Form>

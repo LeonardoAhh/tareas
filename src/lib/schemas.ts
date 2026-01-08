@@ -11,6 +11,8 @@ export const LoginSchema = z.object({
 
 export const TareaSchema = z.object({
   id: z.string().optional(),
+  userId: z.string().optional(),
+  completed: z.boolean().optional(),
   tarea: z.string().min(1, 'La tarea no puede estar vacía.'),
   prioridad: z.enum(['baja', 'media', 'alta']),
   fechaInicio: z.date(),
