@@ -66,7 +66,7 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="space-y-6 bg-card p-6 rounded-lg border"
+        className="space-y-6"
       >
         <FormField
           control={form.control}
