@@ -448,9 +448,14 @@ export default function InicioPage() {
 
   const renderSkeletonColumn = () => (
     <div className="space-y-3">
-      <Skeleton className="h-8 w-24 rounded-md" />
-      <Skeleton className="h-32 w-full rounded-lg" />
-      <Skeleton className="h-32 w-full rounded-lg" />
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-2 w-2 rounded-full bg-muted animate-shimmer" />
+        <Skeleton className="h-6 w-28 rounded-md animate-shimmer" />
+        <Skeleton className="h-5 w-8 rounded-full ml-auto animate-shimmer" />
+      </div>
+      <Skeleton className="h-32 w-full rounded-lg animate-shimmer" />
+      <Skeleton className="h-32 w-full rounded-lg animate-shimmer" />
+      <Skeleton className="h-28 w-full rounded-lg animate-shimmer" />
     </div>
   );
 
