@@ -22,20 +22,20 @@ export default function Home() {
             <Mountain className="h-8 w-8 text-primary" />
             <span className="text-3xl font-bold font-headline">LoginZen</span>
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl">Bienvenido de Nuevo</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account.
+            Ingresa tus credenciales para acceder a tu cuenta.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <LoginForm />
           <div className="mt-6 text-center text-sm">
-            Don&apos;t have an account?{' '}
+            ¿No tienes una cuenta?{' '}
             <Link
               href="#"
               className="font-medium text-primary hover:underline"
             >
-              Sign up
+              Regístrate
             </Link>
           </div>
         </CardContent>

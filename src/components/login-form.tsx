@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useTransition } from 'react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { LoginSchema } from '@/lib/schemas';
 import { login } from '@/app/actions';
@@ -22,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 export function LoginForm() {
+  const router = useRouter();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
@@ -38,17 +40,17 @@ export function LoginForm() {
       login(values).then((data) => {
         if (data.error) {
           toast({
-            title: 'Login Failed',
+            title: 'Inicio de Sesión Fallido',
             description: data.error,
             variant: 'destructive',
           });
         }
         if (data.success) {
           toast({
-            title: 'Login Successful',
+            title: 'Inicio de Sesión Exitoso',
             description: data.success,
           });
-          form.reset();
+          router.push('/inicio');
         }
       });
     });
@@ -63,10 +65,10 @@ export function LoginForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>Correo Electrónico</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="name@example.com"
+                    placeholder="nombre@ejemplo.com"
                     {...field}
                     type="email"
                     disabled={isPending}
@@ -82,12 +84,12 @@ export function LoginForm() {
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center">
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Contraseña</FormLabel>
                   <Link
                     href="#"
                     className="ml-auto inline-block text-sm text-muted-foreground hover:text-primary hover:underline"
                   >
-                    Forgot your password?
+                    ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
                 <FormControl>
@@ -105,7 +107,7 @@ export function LoginForm() {
         </div>
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Log in
+          Iniciar Sesión
         </Button>
       </form>
     </Form>
