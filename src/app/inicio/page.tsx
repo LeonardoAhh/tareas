@@ -53,6 +53,7 @@ import {
 import { PulsatingButton } from '@/components/ui/pulsating-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
+import { triggerConfetti } from '@/lib/confetti';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -162,6 +163,11 @@ export default function InicioPage() {
     try {
       const tareaRef = doc(firestore, 'users', user.uid, 'tasks', tareaId);
       await updateDoc(tareaRef, { status: newStatus });
+
+      // Trigger confetti if task is completed
+      if (newStatus === 'completada') {
+        triggerConfetti();
+      }
 
       toast({
         title: '✓ Movida',
@@ -277,6 +283,11 @@ export default function InicioPage() {
     try {
       const tareaRef = doc(firestore, 'users', user.uid, 'tasks', draggedTask.id);
       await updateDoc(tareaRef, { status: newStatus });
+
+      // Trigger confetti if task is completed
+      if (newStatus === 'completada') {
+        triggerConfetti();
+      }
 
       toast({
         title: '✓ Tarea movida',
