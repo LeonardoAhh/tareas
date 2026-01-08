@@ -30,7 +30,8 @@ import {
   LogOut,
   Pencil,
   Search,
-  X
+  X,
+  GripVertical
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -87,6 +88,8 @@ export default function InicioPage() {
   const [editingTask, setEditingTask] = useState<Tarea | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPriority, setFilterPriority] = useState<'all' | 'alta' | 'media' | 'baja'>('all');
+  const [draggedTask, setDraggedTask] = useState<Tarea | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<TareaStatus | null>(null);
 
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -228,6 +231,69 @@ export default function InicioPage() {
     setFilterPriority('all');
   };
 
+  // Drag & Drop Handlers
+  const handleDragStart = (e: React.DragEvent, tarea: Tarea) => {
+    setDraggedTask(tarea);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+
+    // Añadir clase visual al elemento arrastrado
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '0.5';
+    }
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = '1';
+    }
+    setDraggedTask(null);
+    setDragOverColumn(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, status: TareaStatus) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverColumn(status);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverColumn(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, newStatus: TareaStatus) => {
+    e.preventDefault();
+
+    if (!draggedTask || !firestore || !user) return;
+
+    // Si la tarea ya está en esta columna, no hacer nada
+    if (draggedTask.status === newStatus) {
+      setDraggedTask(null);
+      setDragOverColumn(null);
+      return;
+    }
+
+    try {
+      const tareaRef = doc(firestore, 'users', user.uid, 'tasks', draggedTask.id);
+      await updateDoc(tareaRef, { status: newStatus });
+
+      toast({
+        title: '✓ Tarea movida',
+        description: `A ${statusConfig[newStatus].title}`,
+        duration: 1500,
+      });
+    } catch (error) {
+      toast({
+        title: '✗ Error',
+        description: 'No se pudo mover la tarea',
+        variant: 'destructive',
+      });
+    }
+
+    setDraggedTask(null);
+    setDragOverColumn(null);
+  };
+
   const formattedTareas = useMemo(() => {
     return tareas?.map(tarea => ({
       ...tarea,
@@ -263,15 +329,27 @@ export default function InicioPage() {
   }, [filteredTareas]);
 
   const renderTaskCard = (tarea: Tarea) => (
-    <Card key={tarea.id} className="group/card transition-all duration-200 hover:shadow-md hover:scale-[1.01]">
+    <Card
+      key={tarea.id}
+      draggable
+      onDragStart={(e) => handleDragStart(e, tarea)}
+      onDragEnd={handleDragEnd}
+      className={cn(
+        "group/card transition-all duration-200 hover:shadow-md hover:scale-[1.01] cursor-move",
+        draggedTask?.id === tarea.id && "opacity-50"
+      )}
+    >
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <p className='font-medium text-sm leading-snug flex-1 break-words'>{tarea.tarea}</p>
+          <div className="flex items-start gap-2 flex-1 min-w-0">
+            <GripVertical className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity" />
+            <p className='font-medium text-sm leading-snug flex-1 break-words'>{tarea.tarea}</p>
+          </div>
           <Badge variant={prioridadVariant[tarea.prioridad]} className="shrink-0 text-xs">
             {prioridadTexto[tarea.prioridad]}
           </Badge>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3 ml-6">
           <CalendarDays className="h-3 w-3 shrink-0" />
           <span className="truncate">{format(tarea.fechaTermino, 'dd MMM', { locale: es })}</span>
         </div>
@@ -441,7 +519,7 @@ export default function InicioPage() {
           </AccordionItem>
         </Accordion>
 
-        {/* Kanban Board - Full Responsive */}
+        {/* Kanban Board - Full Responsive with Drag & Drop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
           {isLoadingTasks || isUserLoading ? (
             <>
@@ -451,7 +529,16 @@ export default function InicioPage() {
             </>
           ) : (
             statusOrder.map(status => (
-              <div key={status} className="bg-muted/30 rounded-xl p-4 sm:p-5 border">
+              <div
+                key={status}
+                onDragOver={(e) => handleDragOver(e, status)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, status)}
+                className={cn(
+                  "bg-muted/30 rounded-xl p-4 sm:p-5 border transition-all duration-200",
+                  dragOverColumn === status && "ring-2 ring-primary ring-offset-2 bg-primary/5"
+                )}
+              >
                 <div className="flex items-center gap-2 mb-3 sm:mb-4 pb-2 sm:pb-3 border-b">
                   <div className={cn('h-2 w-2 rounded-full shrink-0', statusConfig[status].color)} />
                   <h2 className="font-semibold text-sm sm:text-base truncate flex-1">
@@ -465,8 +552,8 @@ export default function InicioPage() {
                   {(groupedTasks[status] || []).length > 0 ? (
                     (groupedTasks[status] || []).map(renderTaskCard)
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center text-xs sm:text-sm text-muted-foreground">
-                      <p>Sin tareas</p>
+                    <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center text-xs sm:text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                      <p>Arrastra tareas aquí</p>
                     </div>
                   )}
                 </div>
