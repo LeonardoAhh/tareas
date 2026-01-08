@@ -1,22 +1,16 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Tarea, TareaFormValues } from '@/lib/schemas';
 import { TareaForm } from '@/components/tarea-form';
 import {
@@ -28,6 +22,7 @@ import {
 } from '@/firebase';
 import { collection, Timestamp } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Calendar } from '@/components/ui/calendar';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -49,6 +44,7 @@ const prioridadTexto: Record<Tarea['prioridad'], string> = {
 export default function InicioPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -76,79 +72,118 @@ export default function InicioPage() {
     })) || [];
   }, [tareas]);
 
+  const taskDates = useMemo(() => {
+    return formattedTareas.map(tarea => tarea.fechaTermino);
+  }, [formattedTareas]);
+
+  const tasksForSelectedDay = useMemo(() => {
+    if (!selectedDate) return [];
+    return formattedTareas.filter(tarea => isSameDay(tarea.fechaTermino, selectedDate));
+  }, [formattedTareas, selectedDate]);
+
+  const renderTaskItem = (tarea: Tarea) => (
+    <div key={tarea.id} className="p-4 border-b last:border-b-0">
+      <div className="flex items-start justify-between">
+        <p className="font-medium flex-1 mr-4">{tarea.tarea}</p>
+        <Badge variant={prioridadVariant[tarea.prioridad]}>
+          {prioridadTexto[tarea.prioridad]}
+        </Badge>
+      </div>
+      <p className="text-sm text-muted-foreground mt-2">
+        Vence: {format(tarea.fechaTermino, 'PPP', { locale: es })}
+      </p>
+    </div>
+  );
+
   const renderSkeleton = () => (
-    <TableRow>
-      <TableCell colSpan={5}>
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-full" />
-          <Skeleton className="h-6 w-3/4" />
-          <Skeleton className="h-6 w-1/2" />
-        </div>
-      </TableCell>
-    </TableRow>
+    <div className="p-4 space-y-3">
+      <Skeleton className="h-6 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 md:p-8">
-      <Card className="mx-auto max-w-7xl">
-        <CardHeader>
-          <CardTitle className="text-2xl">Mis Pendientes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-8">
-            <TareaForm onSubmit={agregarTarea} />
-          </div>
-          
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tarea</TableHead>
-                  <TableHead className="hidden sm:table-cell">Prioridad</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha de Inicio</TableHead>
-                  <TableHead className="hidden md:table-cell">Fecha de Término</TableHead>
-                  <TableHead className="sm:hidden">Detalles</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+    <div className="min-h-dvh bg-background p-4 sm:p-6 md:p-8">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* Columna Izquierda: Calendario y Formulario */}
+        <div className="lg:col-span-2 space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Agregar Nueva Tarea</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TareaForm onSubmit={agregarTarea} />
+            </CardContent>
+          </Card>
+          <Card className="hidden lg:block">
+            <CardContent className="p-2">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="w-full"
+                locale={es}
+                modifiers={{
+                  hasTask: taskDates,
+                }}
+                modifiersClassNames={{
+                  hasTask: 'bg-primary/20 text-primary-foreground rounded-md',
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna Derecha: Lista de Tareas */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Tareas para {selectedDate ? format(selectedDate, 'd MMM yyyy', { locale: es }) : 'el día'}
+              </CardTitle>
+              <CardDescription>
+                {tasksForSelectedDay.length > 0 
+                  ? `Tienes ${tasksForSelectedDay.length} tarea(s) para este día.`
+                  : 'No hay tareas para este día.'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+               <div className="divide-y">
                 {isUserLoading || isLoadingTasks ? (
-                  renderSkeleton()
-                ) : formattedTareas.length > 0 ? (
-                  formattedTareas.map((tarea) => (
-                    <TableRow key={tarea.id}>
-                      <TableCell className="font-medium">{tarea.tarea}</TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <Badge variant={prioridadVariant[tarea.prioridad]}>
-                          {prioridadTexto[tarea.prioridad]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{format(tarea.fechaInicio, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell className="hidden md:table-cell">{format(tarea.fechaTermino, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell className="sm:hidden">
-                        <div className="flex flex-col gap-2 text-sm">
-                          <div>
-                            <Badge variant={prioridadVariant[tarea.prioridad]} className="mb-1">
-                              {prioridadTexto[tarea.prioridad]}
-                            </Badge>
-                          </div>
-                          <div><strong>Inicio:</strong> {format(tarea.fechaInicio, 'dd/MM/yy')}</div>
-                          <div><strong>Fin:</strong> {format(tarea.fechaTermino, 'dd/MM/yy')}</div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  <>
+                    {renderSkeleton()}
+                    {renderSkeleton()}
+                  </>
+                ) : tasksForSelectedDay.length > 0 ? (
+                  tasksForSelectedDay.map(renderTaskItem)
                 ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center">
-                      Aún no tienes tareas. ¡Agrega una!
-                    </TableCell>
-                  </TableRow>
+                  <p className="p-4 text-center text-muted-foreground">
+                    Selecciona un día en el calendario para ver las tareas.
+                  </p>
                 )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+           <Card className="mt-8 lg:hidden">
+            <CardContent className="p-2">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="w-full"
+                locale={es}
+                modifiers={{
+                  hasTask: taskDates,
+                }}
+                modifiersClassNames={{
+                  hasTask: 'bg-primary/20 rounded-md',
+                }}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
