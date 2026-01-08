@@ -12,8 +12,8 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-4">
-      <div className="absolute top-4 right-4 md:top-6 md:right-6">
+    <main className="flex flex-col items-center justify-center min-h-dvh p-[calc(1rem+var(--sal))] sm:p-[calc(1.5rem+var(--sal))] md:p-[calc(2rem+var(--sal))]">
+      <div className="absolute top-4 right-4 md:top-6 md:right-6" style={{ right: 'calc(1rem + var(--sar))', top: 'calc(1rem + var(--sat))' }}>
         <ThemeToggle />
       </div>
       <Card className="w-full max-w-md shadow-2xl bg-card">
