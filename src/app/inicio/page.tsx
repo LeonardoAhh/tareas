@@ -22,7 +22,7 @@ import {
 import { collection, Timestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar } from '@/components/ui/calendar';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle2, 
   Circle, 
@@ -34,36 +34,44 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
   fechaTermino: Timestamp;
 };
+
 const prioridadVariant: Record<Tarea['prioridad'], 'destructive' | 'secondary' | 'default'> = {
   alta: 'destructive',
   media: 'secondary',
   baja: 'default',
 };
+
 const prioridadTexto: Record<Tarea['prioridad'], string> = {
   alta: 'Alta',
   media: 'Media',
   baja: 'Baja',
 };
+
 const prioridadColor: Record<Tarea['prioridad'], string> = {
   alta: 'from-red-500/20 to-orange-500/20 border-red-500/30',
   media: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30',
   baja: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
 };
+
 export default function InicioPage() {
   const { firestore } = useFirebase();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'tasks');
   }, [firestore, user]);
+
   const { data: tareas, isLoading: isLoadingTasks } = useCollection<TareaFirestore>(tasksCollection);
+
   const agregarTarea = async (nuevaTarea: TareaFormValues) => {
     if (!tasksCollection || !user) return;
     try {
@@ -88,6 +96,7 @@ export default function InicioPage() {
       });
     }
   };
+
   const toggleTareaCompletada = async (tareaId: string, completed: boolean) => {
     if (!firestore || !user) return;
     try {
@@ -107,6 +116,7 @@ export default function InicioPage() {
       });
     }
   };
+
   const eliminarTarea = async (tareaId: string) => {
     if (!firestore || !user) return;
     setDeletingId(tareaId);
@@ -129,6 +139,7 @@ export default function InicioPage() {
       setDeletingId(null);
     }
   };
+
   const formattedTareas = useMemo(() => {
     return tareas?.map(tarea => ({
       ...tarea,
@@ -136,39 +147,37 @@ export default function InicioPage() {
       fechaTermino: tarea.fechaTermino.toDate(),
     })) || [];
   }, [tareas]);
+
   const taskDates = useMemo(() => {
     return formattedTareas.map(tarea => tarea.fechaTermino);
   }, [formattedTareas]);
+
   const tasksForSelectedDay = useMemo(() => {
     if (!selectedDate) return [];
     return formattedTareas.filter(tarea => isSameDay(tarea.fechaTermino, selectedDate));
   }, [formattedTareas, selectedDate]);
+
   const taskStats = useMemo(() => {
     const total = formattedTareas.length;
     const completed = formattedTareas.filter(t => t.completed).length;
     const pending = total - completed;
     return { total, completed, pending };
   }, [formattedTareas]);
+
   const renderTaskItem = (tarea: Tarea, index: number) => (
-    <motion.div
+    <div
       key={tarea.id}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -100 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn(
         'group relative overflow-hidden rounded-lg border p-4 transition-all duration-300',
         'hover:shadow-lg hover:shadow-primary/10 hover:border-primary/50',
         tarea.completed && 'opacity-60 bg-muted/30'
       )}
     >
-      {/* Gradiente de fondo según prioridad */}
       <div className={cn(
         'absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100',
         prioridadColor[tarea.prioridad]
       )} />
       <div className="relative flex items-start gap-3">
-        {/* Checkbox para completar */}
         <Button
           variant="ghost"
           size="icon"
@@ -182,7 +191,6 @@ export default function InicioPage() {
             <Circle className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
           )}
         </Button>
-        {/* Contenido de la tarea */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">
             <p className={cn(
@@ -205,7 +213,6 @@ export default function InicioPage() {
             </div>
           </div>
         </div>
-        {/* Botón eliminar */}
         <Button
           variant="ghost"
           size="icon"
@@ -217,8 +224,9 @@ export default function InicioPage() {
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-    </motion.div>
+    </div>
   );
+
   const renderSkeleton = () => (
     <div className="p-4 space-y-3">
       <div className="flex gap-3">
@@ -230,15 +238,11 @@ export default function InicioPage() {
       </div>
     </div>
   );
+
   return (
     <div className="min-h-dvh bg-gradient-to-br from-background via-background to-primary/5 p-4 sm:p-6 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header con estadísticas */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-2"
-        >
+        <div>
           <div className="flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
@@ -262,15 +266,11 @@ export default function InicioPage() {
               </div>
             </div>
           )}
-        </motion.div>
+        </div>
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Columna Izquierda: Calendario y Formulario */}
           <div className="lg:col-span-2 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
+            <div>
               <Card className="border-primary/20 shadow-xl shadow-primary/5">
                 <CardHeader className="space-y-1">
                   <CardTitle className="text-xl">Agregar Nueva Tarea</CardTitle>
@@ -282,13 +282,8 @@ export default function InicioPage() {
                   <TareaForm onSubmit={agregarTarea} />
                 </CardContent>
               </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="hidden lg:block"
-            >
+            </div>
+            <div className="hidden lg:block">
               <Card className="border-primary/20 shadow-xl shadow-primary/5">
                 <CardContent className="p-4">
                   <Calendar
@@ -306,15 +301,11 @@ export default function InicioPage() {
                   />
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
-          {/* Columna Derecha: Lista de Tareas */}
+
           <div className="lg:col-span-1 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-            >
+            <div>
               <Card className="border-primary/20 shadow-xl shadow-primary/5">
                 <CardHeader className="space-y-1">
                   <CardTitle className="text-lg">
@@ -337,15 +328,11 @@ export default function InicioPage() {
                           {renderSkeleton()}
                         </>
                       ) : tasksForSelectedDay.length > 0 ? (
-                        <AnimatePresence mode="popLayout">
+                        <div>
                           {tasksForSelectedDay.map((tarea, index) => renderTaskItem(tarea, index))}
-                        </AnimatePresence>
+                        </div>
                       ) : (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="flex flex-col items-center justify-center py-12 text-center"
-                        >
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
                           <CalendarDays className="h-12 w-12 text-muted-foreground/50 mb-3" />
                           <p className="text-sm text-muted-foreground">
                             No hay tareas para este día
@@ -353,20 +340,14 @@ export default function InicioPage() {
                           <p className="text-xs text-muted-foreground/70 mt-1">
                             Selecciona otro día o crea una nueva tarea
                           </p>
-                        </motion.div>
+                        </div>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
-            {/* Calendario móvil */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="lg:hidden"
-            >
+            </div>
+            <div className="lg:hidden">
               <Card className="border-primary/20 shadow-xl shadow-primary/5">
                 <CardContent className="p-4">
                   <Calendar
@@ -384,7 +365,7 @@ export default function InicioPage() {
                   />
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
