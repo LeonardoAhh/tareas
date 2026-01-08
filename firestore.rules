@@ -1,0 +1,125 @@
+/**
+ * This ruleset enforces a strict user-ownership security model for the LoginZen application.
+ *
+ * Core Philosophy:
+ * The security model is built on the principle that users have complete control over their own
+ * data and no visibility into the data of other users. All operations are authorized based on
+ * the authenticated user's UID matching the document path.
+ *
+ * Data Structure:
+ * All user-specific data, including tasks, is nested hierarchically under a top-level `users`
+ * collection. The structure is /users/{userId}/tasks/{taskId}, where {userId} corresponds to
+ * the Firebase Authentication UID. This path-based ownership is simple, performant, and secure.
+ *
+ * Key Security Decisions:
+ * - User Isolation: Users can only read, write, update, and delete their own user profile
+ *   and their own tasks. Cross-user access is strictly prohibited.
+ * - User Enumeration Disabled: Listing the top-level `/users` collection is disallowed to
+ *   prevent clients from discovering the application's entire user base.
+ * - Relational Integrity: On document creation, the rules validate that the owner ID within
+ *   the document's data matches the owner ID in the path, ensuring data consistency. On
+ *   updates, this owner ID is enforced as immutable.
+ * - Prototyping Flexibility: While authorization is strict, the rules do not enforce the
+ *   exact shape or data types of content fields (e.g., `description`, `completed`), allowing for
+ *   rapid development and schema iteration.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the foundation of the ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete
+     * operations to prevent acting on non-existent data.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * Validates required authorization fields for creating a User document.
+     * Ensures the document's internal 'id' matches the path {userId}.
+     */
+    function hasValidUserDataForCreate(userId) {
+      return request.resource.data.id == userId;
+    }
+
+    /**
+     * Enforces immutability of the User's 'id' field during updates.
+     * This prevents re-assigning a user profile to a different user.
+     */
+    function hasValidUserDataForUpdate() {
+      return request.resource.data.id == resource.data.id;
+    }
+
+    /**
+     * Validates required authorization fields for creating a Task document.
+     * Ensures the new task is correctly linked to the owner via the 'userId' field.
+     */
+    function hasValidTaskDataForCreate(userId) {
+      return request.resource.data.userId == userId;
+    }
+
+    /**
+     * Enforces immutability of the Task's 'userId' field during updates.
+     * This prevents a task from being moved from one user to another.
+     */
+    function hasValidTaskDataForUpdate() {
+      return request.resource.data.userId == resource.data.userId;
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Controls access to user profile documents.
+     * @path /users/{userId}
+     * @allow (get) A signed-in user reading their own profile: `get /users/user_abc` where auth.uid is `user_abc`.
+     * @deny (get) A signed-in user trying to read another user's profile: `get /users/user_xyz` where auth.uid is `user_abc`.
+     * @deny (list) Any user attempting to list all user profiles in the application.
+     * @principle Restricts access to a user's own data tree and prevents user enumeration.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && hasValidUserDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && hasValidUserDataForUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Controls access to the tasks within a user's subcollection.
+     * @path /users/{userId}/tasks/{taskId}
+     * @allow (create) A signed-in user creating a task for themselves: `create /users/user_abc/tasks/task_123` where auth.uid is `user_abc`.
+     * @allow (list) A signed-in user listing all of their own tasks: `list /users/user_abc/tasks` where auth.uid is `user_abc`.
+     * @deny (update) A signed-in user trying to modify a task belonging to another user: `update /users/user_xyz/tasks/task_456` where auth.uid is `user_abc`.
+     * @principle Enforces strict document ownership within a user-specific subcollection.
+     */
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && hasValidTaskDataForCreate(userId);
+      allow update: if isExistingOwner(userId) && hasValidTaskDataForUpdate();
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

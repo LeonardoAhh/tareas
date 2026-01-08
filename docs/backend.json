@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the LoginZen application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a task associated with a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the task."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who owns this task. (Relationship: User 1:N Task)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "description",
+        "completed"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  The 'userId' is the Firebase Authentication UID.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user, corresponding to their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Stores tasks associated with a specific user. Each task is a subcollection within the user's document, ensuring only the owning user has access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user who owns the task."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique ID of the task."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure secure and scalable data management for the LoginZen application, focusing on task management for individual users. The structure prioritizes authorization independence, clarity, and security.\n\n*   **Authorization Independence:** The `tasks` subcollection under each user's document ensures that each task is directly associated with its owner. No `get()` calls are needed to verify ownership, which enables atomic operations.\n\n*   **Structural Segregation:** Tasks are segregated under each user's document, so security rules can be applied uniformly to all documents in the `tasks` collection without needing to differentiate between public and private data.\n\n*   **Access Modeling:** The data structure utilizes path-based ownership for private user data (tasks), as it directly nests tasks under the user's document (`/users/{userId}/tasks/{taskId}`). This approach is simple and efficient.\n\n*   **QAPs (Rules are not Filters):** Secure `list` operations are enabled, as only the authenticated user can access their own tasks, achieved through the path-based ownership structure. No filtering is required in the rules themselves.\n\nThe design does not require denormalization, membership maps or global roles. It relies solely on the prescribed path-based ownership."
+  }
+}
