@@ -28,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 
 export function LoginForm() {
   const router = useRouter();
@@ -129,10 +130,16 @@ export function LoginForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full h-11" disabled={isPending}>
-              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Iniciar Sesión
-            </Button>
+            <InteractiveHoverButton type="submit" className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90" disabled={isPending}>
+              {isPending ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Iniciando...
+                </span>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </InteractiveHoverButton>
           </form>
         </Form>
       </TabsContent>
