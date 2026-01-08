@@ -28,9 +28,12 @@ import {
   CalendarDays,
   CheckCircle2,
   LogOut,
-  Menu
+  Pencil,
+  Search,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
@@ -39,6 +42,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
 
@@ -74,6 +84,9 @@ export default function InicioPage() {
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<Tarea | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterPriority, setFilterPriority] = useState<'all' | 'alta' | 'media' | 'baja'>('all');
 
   const tasksCollection = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -103,6 +116,32 @@ export default function InicioPage() {
         description: 'No se pudo agregar la tarea',
         variant: 'destructive',
         duration: 3000,
+      });
+    }
+  };
+
+  const actualizarTarea = async (tareaActualizada: TareaFormValues) => {
+    if (!firestore || !user || !editingTask) return;
+    try {
+      const tareaRef = doc(firestore, 'users', user.uid, 'tasks', editingTask.id);
+      await updateDoc(tareaRef, {
+        tarea: tareaActualizada.tarea,
+        prioridad: tareaActualizada.prioridad,
+        fechaInicio: tareaActualizada.fechaInicio,
+        fechaTermino: tareaActualizada.fechaTermino,
+      });
+
+      setEditingTask(null);
+      toast({
+        title: '✓ Tarea actualizada',
+        description: 'Los cambios se guardaron correctamente',
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        title: '✗ Error',
+        description: 'No se pudo actualizar la tarea',
+        variant: 'destructive',
       });
     }
   };
@@ -176,6 +215,19 @@ export default function InicioPage() {
     }
   };
 
+  const handleEdit = (tarea: Tarea) => {
+    setEditingTask(tarea);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTask(null);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterPriority('all');
+  };
+
   const formattedTareas = useMemo(() => {
     return tareas?.map(tarea => ({
       ...tarea,
@@ -185,8 +237,22 @@ export default function InicioPage() {
     })) || [];
   }, [tareas]);
 
+  // Filtrado de tareas
+  const filteredTareas = useMemo(() => {
+    return formattedTareas.filter(tarea => {
+      const matchesSearch = tarea.tarea
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      const matchesPriority = filterPriority === 'all'
+        || tarea.prioridad === filterPriority;
+
+      return matchesSearch && matchesPriority;
+    });
+  }, [formattedTareas, searchTerm, filterPriority]);
+
   const groupedTasks = useMemo(() => {
-    return formattedTareas.reduce((acc, task) => {
+    return filteredTareas.reduce((acc, task) => {
       const status = task.status || 'pendiente';
       if (!acc[status]) {
         acc[status] = [];
@@ -194,7 +260,7 @@ export default function InicioPage() {
       acc[status].push(task);
       return acc;
     }, {} as Record<TareaStatus, Tarea[]>);
-  }, [formattedTareas]);
+  }, [filteredTareas]);
 
   const renderTaskCard = (tarea: Tarea) => (
     <Card key={tarea.id} className="group/card transition-all duration-200 hover:shadow-md hover:scale-[1.01]">
@@ -210,16 +276,27 @@ export default function InicioPage() {
           <span className="truncate">{format(tarea.fechaTermino, 'dd MMM', { locale: es })}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-destructive"
-            onClick={() => eliminarTarea(tarea.id)}
-            disabled={deletingId === tarea.id}
-            aria-label="Eliminar tarea"
-          >
-            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-primary"
+              onClick={() => handleEdit(tarea)}
+              aria-label="Editar tarea"
+            >
+              <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 sm:h-8 sm:w-8 shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-destructive"
+              onClick={() => eliminarTarea(tarea.id)}
+              disabled={deletingId === tarea.id}
+              aria-label="Eliminar tarea"
+            >
+              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Button>
+          </div>
           <div className="flex gap-1">
             <Button
               variant="outline"
@@ -253,12 +330,14 @@ export default function InicioPage() {
     </div>
   );
 
+  const hasFilters = searchTerm || filterPriority !== 'all';
+
   return (
     <div className="min-h-dvh bg-gradient-to-br from-background via-background to-primary/5 safe-top safe-bottom safe-left safe-right">
       {/* Header - Responsive */}
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 ring-2 ring-primary/20 shrink-0">
                 <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
@@ -266,7 +345,7 @@ export default function InicioPage() {
               <div className="min-w-0">
                 <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">Tareas</h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                  {formattedTareas.length} {formattedTareas.length === 1 ? 'tarea' : 'tareas'}
+                  {filteredTareas.length} de {formattedTareas.length} {filteredTareas.length === 1 ? 'tarea' : 'tareas'}
                 </p>
               </div>
             </div>
@@ -283,22 +362,81 @@ export default function InicioPage() {
               </Button>
             </div>
           </div>
+
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Buscar tareas..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchTerm && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Select value={filterPriority} onValueChange={(value: any) => setFilterPriority(value)}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="Prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="alta">Alta</SelectItem>
+                  <SelectItem value="media">Media</SelectItem>
+                  <SelectItem value="baja">Baja</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasFilters && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={clearFilters}
+                  className="shrink-0"
+                  title="Limpiar filtros"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content - Responsive */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 max-w-7xl">
         {/* Task Form - Responsive */}
-        <Accordion type="single" collapsible className="w-full mb-4 sm:mb-6 md:mb-8">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full mb-4 sm:mb-6 md:mb-8"
+          value={editingTask ? "item-1" : undefined}
+        >
           <AccordionItem value="item-1" className="border rounded-xl overflow-hidden">
             <AccordionTrigger className="px-4 sm:px-6 py-3 sm:py-4 hover:no-underline hover:bg-primary/5">
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                <span className="text-sm sm:text-base">Nueva Tarea</span>
+                {editingTask ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                <span className="text-sm sm:text-base">
+                  {editingTask ? 'Editar Tarea' : 'Nueva Tarea'}
+                </span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <TareaForm onSubmit={agregarTarea} />
+              <TareaForm
+                onSubmit={editingTask ? actualizarTarea : agregarTarea}
+                onCancel={editingTask ? handleCancelEdit : undefined}
+                tareaInicial={editingTask || undefined}
+              />
             </AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useEffect } from 'react';
 
 interface TareaFormProps {
   onSubmit: (data: TareaFormValues) => void;
@@ -43,15 +44,36 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     },
   });
 
+  // Resetear form cuando cambia tareaInicial
+  useEffect(() => {
+    if (tareaInicial) {
+      form.reset({
+        ...tareaInicial,
+        fechaInicio: new Date(tareaInicial.fechaInicio),
+        fechaTermino: new Date(tareaInicial.fechaTermino),
+      });
+    } else {
+      form.reset({
+        tarea: '',
+        prioridad: 'media',
+        estado: 'pendiente',
+        fechaInicio: new Date(),
+        fechaTermino: new Date(),
+      });
+    }
+  }, [tareaInicial, form]);
+
   const handleSubmit = (data: TareaFormValues) => {
     onSubmit(data);
-    form.reset({
-      tarea: '',
-      prioridad: 'media',
-      estado: 'pendiente',
-      fechaInicio: new Date(),
-      fechaTermino: new Date(),
-    });
+    if (!tareaInicial) {
+      form.reset({
+        tarea: '',
+        prioridad: 'media',
+        estado: 'pendiente',
+        fechaInicio: new Date(),
+        fechaTermino: new Date(),
+      });
+    }
   };
 
   // Helper para convertir Date a string formato YYYY-MM-DD
@@ -61,6 +83,8 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const isEditing = !!tareaInicial;
 
   return (
     <Form {...form}>
@@ -152,10 +176,14 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
           />
         </div>
         <div className="flex justify-end gap-2 sm:gap-4 pt-2">
-          {onCancel && <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>}
-          <Button type="submit">Guardar</Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancelar
+            </Button>
+          )}
+          <Button type="submit">
+            {isEditing ? 'Actualizar' : 'Guardar'}
+          </Button>
         </div>
       </form>
     </Form>
