@@ -4,48 +4,54 @@
 
 @layer base {
   :root {
-    /* Modern Minimalist Light Theme - Softer, cleaner palette */
-    --background: 0 0% 98%;
-    /* Almost white */
-    --foreground: 240 10% 10%;
-    /* Near black with slight blue tint */
+    /* iOS 26 Inspired Light Theme - Warm, Soft, Eye-friendly */
+    --background: 40 15% 97%;
+    /* Warm off-white (beige tint) */
+    --foreground: 240 8% 15%;
+    /* Soft dark gray, not pure black */
 
-    --card: 0 0% 100%;
-    /* Pure white */
-    --card-foreground: 240 10% 10%;
+    --card: 40 20% 99%;
+    /* Slightly warmer white */
+    --card-foreground: 240 8% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
+    --popover: 40 20% 99%;
+    --popover-foreground: 240 8% 15%;
 
-    /* Primary: Modern Teal */
-    --primary: 180 65% 45%;
-    /* Balanced teal */
+    /* Primary: Softer Teal with slight warmth */
+    --primary: 175 50% 48%;
+    /* Less saturated, warmer teal */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 96%;
-    /* Very light gray */
-    --secondary-foreground: 240 10% 10%;
+    --secondary: 40 10% 94%;
+    /* Warm light gray */
+    --secondary-foreground: 240 8% 15%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 45%;
+    --muted: 40 10% 94%;
+    --muted-foreground: 240 6% 50%;
+    /* Medium gray instead of dark */
 
-    --accent: 180 65% 95%;
-    /* Light teal tint */
-    --accent-foreground: 180 65% 25%;
+    --accent: 175 40% 92%;
+    /* Very soft teal tint */
+    --accent-foreground: 175 50% 30%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 65% 55%;
+    /* Slightly less intense red */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 180 65% 45%;
+    --border: 40 8% 88%;
+    /* Warm subtle border */
+    --input: 40 8% 88%;
+    --ring: 175 50% 48%;
 
     --radius: 0.75rem;
 
-    /* Glassmorphism for light mode */
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.18);
-    --glass-shadow: rgba(0, 0, 0, 0.1);
+    /* Glassmorphism for light mode - More subtle */
+    --glass-bg: rgba(255, 252, 248, 0.75);
+    /* Warm white with more opacity */
+    --glass-border: rgba(200, 195, 190, 0.2);
+    /* Warm border */
+    --glass-shadow: rgba(0, 0, 0, 0.05);
+    /* Much softer shadow */
 
     /* Safe area insets for PWA */
     --sat: env(safe-area-inset-top);
