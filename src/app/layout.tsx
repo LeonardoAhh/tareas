@@ -11,11 +11,8 @@ const APP_DESCRIPTION = "Aplicación web progresiva para gestionar tus tareas co
 
 export const metadata: Metadata = {
   applicationName: APP_NAME,
-  title: {
-    default: APP_DEFAULT_TITLE,
-    template: APP_TITLE_TEMPLATE,
-  },
-  description: APP_DESCRIPTION,
+  title: 'Task Manager - Gestiona tus tareas de forma eficiente',
+  description: 'Task Manager es una aplicación moderna de gestión de tareas con Pomodoro timer, recordatorios inteligentes y sincronización en tiempo real. Organiza tu vida con estilo.',
   keywords: ['tareas', 'kanban', 'productividad', 'pwa', 'gestión de tareas', 'organización', 'firebase'],
   authors: [{ name: 'Leonardo' }],
   creator: 'Leonardo',

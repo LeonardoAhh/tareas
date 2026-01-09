@@ -61,6 +61,7 @@ import { ProductivityChart } from '@/components/productivity-chart';
 import { SettingsModal } from '@/components/settings-modal';
 import { useReminders } from '@/hooks/use-reminders';
 import { WelcomeMessage } from '@/components/welcome-message';
+import { TaskIcon } from '@/components/task-icon';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -473,11 +474,11 @@ export default function InicioPage() {
         <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 ring-2 ring-primary/20 shrink-0">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+              <div className="flex items-center justify-center shrink-0">
+                <TaskIcon size={40} />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">Tareas</h1>
+                <h1 className="text-base sm:text-lg md:text-xl font-bold truncate">Task Manager</h1>
                 <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   {filteredTareas.length} de {formattedTareas.length} {filteredTareas.length === 1 ? 'tarea' : 'tareas'}
                 </p>
