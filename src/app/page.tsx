@@ -1,15 +1,16 @@
 import { LoginForm } from '@/components/login-form';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { CheckCircle2, Zap, Shield, Smartphone } from 'lucide-react';
+import { TaskIcon } from '@/components/task-icon';
+import { Zap, Shield, Smartphone } from 'lucide-react';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Tareas - Organiza tu vida con Kanban',
-  description: 'Aplicación web progresiva (PWA) para gestionar tus tareas con tableros Kanban. Simple, rápida y elegante. Funciona en iOS y Android.',
-  keywords: ['tareas', 'kanban', 'productividad', 'pwa', 'gestión de tareas', 'organización'],
+  title: 'Task Manager - Gestiona tus tareas de forma eficiente',
+  description: 'Task Manager es una aplicación moderna de gestión de tareas con Pomodoro timer, recordatorios inteligentes y sincronización en tiempo real.',
+  keywords: ['task manager', 'tareas', 'productividad', 'pwa', 'gestión de tareas', 'pomodoro'],
   openGraph: {
-    title: 'Tareas - Kanban',
-    description: 'Organiza tu vida con tableros Kanban simples y elegantes',
+    title: 'Task Manager',
+    description: 'Gestiona tus tareas de forma eficiente con Task Manager',
     type: 'website',
   },
 };
@@ -35,16 +36,16 @@ export default function Home() {
         {/* Hero Section - iOS inspired */}
         <div className="hidden lg:block space-y-8">
           {/* App Icon */}
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary to-primary/70 shadow-2xl shadow-primary/25 mb-4">
-            <CheckCircle2 className="h-12 w-12 text-white" strokeWidth={2.5} />
+          <div className="mb-4">
+            <TaskIcon size={96} />
           </div>
 
           <div className="space-y-6">
             <h1 className="text-5xl xl:text-6xl font-bold tracking-tight leading-[1.1]">
-              Tareas
+              Task Manager
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed max-w-md">
-              La manera más simple y elegante de organizar tu vida con tableros Kanban
+              Gestiona tus tareas de forma eficiente con recordatorios, Pomodoro y sincronización en tiempo real
             </p>
           </div>
 
