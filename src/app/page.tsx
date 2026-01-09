@@ -16,96 +16,89 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="relative min-h-dvh flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4 sm:p-6 md:p-8 safe-top safe-bottom safe-left safe-right">
-      {/* Theme Toggle - Fixed Position */}
-      <div className="fixed top-4 right-4 z-50 safe-top safe-right">
-        <ThemeToggle />
+    <main className="relative min-h-dvh flex flex-col items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4 sm:p-6 md:p-8 safe-top safe-bottom safe-left safe-right overflow-hidden">
+      {/* iOS-style background blur orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      {/* Theme Toggle - iOS style */}
+      <div className="fixed top-6 right-6 z-50 safe-top safe-right">
+        <div className="glass-card rounded-2xl p-2">
+          <ThemeToggle />
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="w-full max-w-5xl mx-auto grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-        {/* Hero Section - Hidden on mobile, visible on desktop */}
-        <div className="hidden lg:block space-y-6">
-          <div className="space-y-4">
-            <h1 className="text-4xl xl:text-5xl font-bold tracking-tight leading-tight">
-              Organiza tus tareas de forma{' '}
-              <span className="text-primary">simple y efectiva</span>
+      <div className="relative w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        {/* Hero Section - iOS inspired */}
+        <div className="hidden lg:block space-y-8">
+          {/* App Icon */}
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-[28px] bg-gradient-to-br from-primary to-primary/70 shadow-2xl shadow-primary/25 mb-4">
+            <CheckCircle2 className="h-12 w-12 text-white" strokeWidth={2.5} />
+          </div>
+
+          <div className="space-y-6">
+            <h1 className="text-5xl xl:text-6xl font-bold tracking-tight leading-[1.1]">
+              Tareas
             </h1>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              Gestiona tus pendientes con tableros Kanban minimalistas.
-              Diseñado para productividad sin distracciones.
+            <p className="text-xl text-muted-foreground leading-relaxed max-w-md">
+              La manera más simple y elegante de organizar tu vida con tableros Kanban
             </p>
           </div>
 
-          {/* Features */}
-          <div className="grid gap-4 pt-4">
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0">
-                <Zap className="h-5 w-5 text-primary" />
+          {/* Features - iOS cards */}
+          <div className="grid gap-4 pt-6">
+            {[
+              { icon: Zap, title: 'Rápido y fluido', desc: 'Optimizado para máximo rendimiento' },
+              { icon: Shield, title: 'Seguro y privado', desc: 'Tus datos protegidos con Firebase' },
+              { icon: Smartphone, title: 'Funciona en todo', desc: 'iOS, Android y escritorio' },
+            ].map((feature, i) => (
+              <div key={i} className="group flex items-center gap-4 p-4 rounded-2xl bg-muted/40 hover:bg-muted/60 transition-all duration-300 hover:scale-[1.02]">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 group-hover:bg-primary/15 transition-colors shrink-0">
+                  <feature.icon className="h-6 w-6 text-primary" strokeWidth={2} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base mb-0.5">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-snug">{feature.desc}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold mb-1">Rápido y ligero</h3>
-                <p className="text-sm text-muted-foreground">
-                  Rendimiento optimizado para una experiencia fluida
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0">
-                <Shield className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Seguro y privado</h3>
-                <p className="text-sm text-muted-foreground">
-                  Tus datos protegidos con Firebase Authentication
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 shrink-0">
-                <Smartphone className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold mb-1">Funciona en todos lados</h3>
-                <p className="text-sm text-muted-foreground">
-                  PWA instalable en iOS, Android y escritorio
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Login Section */}
+        {/* Login Section - iOS card */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          {/* Mobile Hero - Only visible on mobile */}
-          <div className="text-center mb-6 sm:mb-8 lg:hidden space-y-2">
-            <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-primary/10 mb-3 sm:mb-4 ring-2 ring-primary/20">
-              <CheckCircle2 className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
+          {/* Mobile App Icon */}
+          <div className="flex justify-center mb-8 lg:hidden">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary to-primary/70 shadow-2xl shadow-primary/25">
+              <CheckCircle2 className="h-10 w-10 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tareas</h1>
-            <p className="text-sm sm:text-base text-muted-foreground px-4">
-              Organiza tu vida con tableros Kanban
+          </div>
+
+          {/* Mobile Title */}
+          <div className="text-center mb-8 lg:hidden space-y-3">
+            <h1 className="text-3xl font-bold tracking-tight">Tareas</h1>
+            <p className="text-muted-foreground text-base px-4">
+              Organiza tu vida de forma simple
             </p>
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden lg:block text-center mb-6">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4 ring-2 ring-primary/20">
-              <CheckCircle2 className="h-8 w-8 text-primary" />
-            </div>
-            <h2 className="text-2xl font-bold">Comienza ahora</h2>
+          <div className="hidden lg:block mb-8">
+            <h2 className="text-3xl font-bold tracking-tight mb-2">Inicia sesión</h2>
+            <p className="text-muted-foreground">Organiza tus pendientes de forma inteligente</p>
           </div>
 
-          {/* Login Card */}
-          <div className="bg-card border border-border rounded-2xl shadow-xl shadow-black/5 p-6 sm:p-8">
+          {/* Login Card - iOS glassmorphism */}
+          <div className="glass-card rounded-[28px] shadow-2xl shadow-black/10 p-8 sm:p-10 backdrop-blur-2xl border-2">
             <LoginForm />
           </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-muted-foreground mt-4 sm:mt-6 px-4">
-            Diseñado para simplicidad y productividad
+          <p className="text-center text-sm text-muted-foreground mt-6 px-4">
+            Diseñado para iOS, Android y web
           </p>
         </div>
       </div>

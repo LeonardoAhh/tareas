@@ -81,30 +81,40 @@ export function LoginForm() {
 
   return (
     <Tabs defaultValue="login" className="w-full">
-      <TabsList className="grid w-full grid-cols-2 mb-6">
-        <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-        <TabsTrigger value="register">Registrarse</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 mb-8 h-12 p-1 bg-muted/50 rounded-2xl">
+        <TabsTrigger
+          value="login"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+        >
+          Iniciar Sesión
+        </TabsTrigger>
+        <TabsTrigger
+          value="register"
+          className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm font-medium"
+        >
+          Registrarse
+        </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="login" className="space-y-4">
+      <TabsContent value="login" className="space-y-5">
         <Form {...loginForm}>
           <form
             onSubmit={loginForm.handleSubmit(onLoginSubmit)}
-            className="space-y-4"
+            className="space-y-5"
           >
             <FormField
               control={loginForm.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Correo</FormLabel>
+                  <FormLabel className="text-sm font-medium">Correo electrónico</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="tu@email.com"
                       {...field}
                       type="email"
                       disabled={isPending}
-                      className="h-11"
+                      className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                     />
                   </FormControl>
                   <FormMessage />
@@ -116,21 +126,25 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contraseña</FormLabel>
+                  <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="••••••••"
                       {...field}
                       type="password"
                       disabled={isPending}
-                      className="h-11"
+                      className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <InteractiveHoverButton type="submit" className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90" disabled={isPending}>
+            <InteractiveHoverButton
+              type="submit"
+              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold shadow-lg shadow-primary/25"
+              disabled={isPending}
+            >
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -144,11 +158,11 @@ export function LoginForm() {
         </Form>
       </TabsContent>
 
-      <TabsContent value="register" className="space-y-4">
+      <TabsContent value="register" className="space-y-5">
         <Form {...registerForm}>
           <form
             onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
-            className="space-y-4"
+            className="space-y-5"
           >
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -156,13 +170,13 @@ export function LoginForm() {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre</FormLabel>
+                    <FormLabel className="text-sm font-medium">Nombre</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Juan"
                         {...field}
                         disabled={isPending}
-                        className="h-11"
+                        className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                       />
                     </FormControl>
                     <FormMessage />
@@ -174,13 +188,13 @@ export function LoginForm() {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Apellido</FormLabel>
+                    <FormLabel className="text-sm font-medium">Apellido</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Pérez"
                         {...field}
                         disabled={isPending}
-                        className="h-11"
+                        className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                       />
                     </FormControl>
                     <FormMessage />
@@ -193,14 +207,14 @@ export function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Correo</FormLabel>
+                  <FormLabel className="text-sm font-medium">Correo electrónico</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="tu@email.com"
                       {...field}
                       type="email"
                       disabled={isPending}
-                      className="h-11"
+                      className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                     />
                   </FormControl>
                   <FormMessage />
@@ -212,21 +226,25 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contraseña</FormLabel>
+                  <FormLabel className="text-sm font-medium">Contraseña</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="••••••••"
                       {...field}
                       type="password"
                       disabled={isPending}
-                      className="h-11"
+                      className="h-12 rounded-xl border-2 focus-visible:ring-2 focus-visible:ring-offset-0"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <InteractiveHoverButton type="submit" className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90" disabled={isPending}>
+            <InteractiveHoverButton
+              type="submit"
+              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold shadow-lg shadow-primary/25"
+              disabled={isPending}
+            >
               {isPending ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
