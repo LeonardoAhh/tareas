@@ -7,48 +7,83 @@ import { cn } from '@/lib/utils';
 
 type PomodoroMode = 'work' | 'break';
 
-const WORK_TIME = 25 * 60; // 25 minutes in seconds
-const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+const WORK_TIME = 9 * 60 * 60; // 9 hours in seconds
+const BREAK_TIME = 15 * 60; // 15 minutes in seconds
+
+interface PomodoroState {
+    mode: PomodoroMode;
+    endTime: number | null; // Timestamp when timer should finish
+    sessions: number;
+    isRunning: boolean;
+}
 
 export function PomodoroTimer() {
     const [mode, setMode] = useState<PomodoroMode>('work');
+    const [endTime, setEndTime] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState(WORK_TIME);
     const [isRunning, setIsRunning] = useState(false);
     const [sessions, setSessions] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const notificationShownRef = useRef(false);
 
-    // Load state from localStorage on mount
+    // Load state from localStorage and check if timer completed while away
     useEffect(() => {
         const saved = localStorage.getItem('pomodoro-state');
         if (saved) {
             try {
-                const state = JSON.parse(saved);
+                const state: PomodoroState = JSON.parse(saved);
                 setMode(state.mode || 'work');
-                setTimeLeft(state.timeLeft || WORK_TIME);
                 setSessions(state.sessions || 0);
+
+                // Check if timer was running and calculate time left
+                if (state.isRunning && state.endTime) {
+                    const now = Date.now();
+                    const remaining = Math.max(0, Math.floor((state.endTime - now) / 1000));
+
+                    if (remaining > 0) {
+                        // Timer still running
+                        setEndTime(state.endTime);
+                        setTimeLeft(remaining);
+                        setIsRunning(true);
+                    } else {
+                        // Timer finished while app was closed!
+                        handleTimerComplete(state.mode);
+                        setTimeLeft(state.mode === 'work' ? BREAK_TIME : WORK_TIME);
+                    }
+                } else {
+                    // Timer was paused
+                    setTimeLeft(state.mode === 'work' ? WORK_TIME : BREAK_TIME);
+                }
             } catch (e) {
-                // Ignore parse errors
+                console.error('Error loading pomodoro state:', e);
             }
         }
     }, []);
 
-    // Save state to localStorage
+    // Save state to localStorage whenever it changes
     useEffect(() => {
-        const state = { mode, timeLeft, sessions, isRunning: false };
+        const state: PomodoroState = {
+            mode,
+            endTime,
+            sessions,
+            isRunning,
+        };
         localStorage.setItem('pomodoro-state', JSON.stringify(state));
-    }, [mode, timeLeft, sessions]);
+    }, [mode, endTime, sessions, isRunning]);
 
-    // Timer logic
+    // Timer logic - check every second
     useEffect(() => {
-        if (isRunning && timeLeft > 0) {
+        if (isRunning && endTime) {
             intervalRef.current = setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        handleTimerComplete();
-                        return 0;
-                    }
-                    return prev - 1;
-                });
+                const now = Date.now();
+                const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+
+                setTimeLeft(remaining);
+
+                if (remaining === 0 && !notificationShownRef.current) {
+                    notificationShownRef.current = true;
+                    handleTimerComplete(mode);
+                }
             }, 1000);
         } else {
             if (intervalRef.current) {
@@ -61,23 +96,29 @@ export function PomodoroTimer() {
                 clearInterval(intervalRef.current);
             }
         };
-    }, [isRunning, timeLeft]);
+    }, [isRunning, endTime, mode]);
 
-    const handleTimerComplete = () => {
+    const handleTimerComplete = (completedMode: PomodoroMode) => {
         setIsRunning(false);
+        setEndTime(null);
 
         // Send browser notification
         if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(mode === 'work' ? '¡Descanso! 🎉' : '¡A trabajar! 💪', {
-                body: mode === 'work'
-                    ? 'Toma un descanso de 5 minutos'
-                    : 'Es hora de volver al trabajo',
-                icon: '/icon-192x192.png',
-            });
+            new Notification(
+                completedMode === 'work' ? '¡Tiempo de descanso! 🎉' : '¡A trabajar! 💪',
+                {
+                    body: completedMode === 'work'
+                        ? 'Has completado 9 horas de trabajo. Toma un descanso de 15 minutos.'
+                        : 'Descanso terminado. Es hora de volver al trabajo.',
+                    icon: '/icon-192x192.png',
+                    requireInteraction: true, // Notification stays until user interacts
+                    tag: 'pomodoro-timer', // Replace previous notifications
+                }
+            );
         }
 
         // Switch mode
-        if (mode === 'work') {
+        if (completedMode === 'work') {
             setSessions((prev) => prev + 1);
             setMode('break');
             setTimeLeft(BREAK_TIME);
@@ -85,29 +126,60 @@ export function PomodoroTimer() {
             setMode('work');
             setTimeLeft(WORK_TIME);
         }
+
+        // Reset notification flag after a delay
+        setTimeout(() => {
+            notificationShownRef.current = false;
+        }, 2000);
     };
 
     const toggleTimer = () => {
         // Request notification permission on first interaction
         if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    new Notification('¡Notificaciones activadas! 🔔', {
+                        body: 'Te avisaremos cuando termine el temporizador, incluso si cierras la app.',
+                        icon: '/icon-192x192.png',
+                    });
+                }
+            });
         }
-        setIsRunning(!isRunning);
+
+        if (!isRunning) {
+            // Start timer - calculate end time
+            const duration = mode === 'work' ? WORK_TIME : BREAK_TIME;
+            const newEndTime = Date.now() + (duration * 1000);
+            setEndTime(newEndTime);
+            setIsRunning(true);
+            notificationShownRef.current = false;
+        } else {
+            // Pause timer
+            setIsRunning(false);
+            setEndTime(null);
+        }
     };
 
     const resetTimer = () => {
         setIsRunning(false);
+        setEndTime(null);
         setTimeLeft(mode === 'work' ? WORK_TIME : BREAK_TIME);
+        notificationShownRef.current = false;
     };
 
     const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
         const secs = seconds % 60;
+
+        if (hours > 0) {
+            return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const progress = ((mode === 'work' ? WORK_TIME : BREAK_TIME) - timeLeft) /
-        (mode === 'work' ? WORK_TIME : BREAK_TIME) * 100;
+    const totalTime = mode === 'work' ? WORK_TIME : BREAK_TIME;
+    const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
     return (
         <div className={cn(
@@ -117,9 +189,9 @@ export function PomodoroTimer() {
             <div className="flex items-center justify-between mb-3">
                 <div>
                     <h3 className="font-semibold text-sm">
-                        {mode === 'work' ? '💼 Trabajo' : '☕ Descanso'}
+                        {mode === 'work' ? '💼 Jornada Laboral' : '☕ Descanso'}
                     </h3>
-                    <p className="text-xs text-muted-foreground">{sessions} sesiones</p>
+                    <p className="text-xs text-muted-foreground">{sessions} jornadas completadas</p>
                 </div>
                 <div className="flex gap-1">
                     <Button
@@ -144,9 +216,13 @@ export function PomodoroTimer() {
             </div>
 
             <div className="relative">
-                <div className="text-4xl font-bold text-center mb-2 tabular-nums">
+                <div className="text-3xl font-bold text-center mb-2 tabular-nums">
                     {formatTime(timeLeft)}
                 </div>
+
+                <p className="text-xs text-center text-muted-foreground mb-2">
+                    {mode === 'work' ? '9 horas de trabajo' : '15 min de descanso'}
+                </p>
 
                 {/* Progress bar */}
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -158,6 +234,12 @@ export function PomodoroTimer() {
                         style={{ width: `${progress}%` }}
                     />
                 </div>
+
+                {isRunning && (
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                        🔔 Funciona en segundo plano
+                    </p>
+                )}
             </div>
         </div>
     );
