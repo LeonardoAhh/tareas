@@ -128,10 +128,27 @@ La app usa Firebase Authentication con:
 
 ## 📝 Notas de Configuración
 
-### Firebase
-Las credenciales de Firebase están hardcoded en `src/firebase/config.ts`. Para mayor seguridad en producción, considera:
-1. Mover las credenciales a variables de entorno de Vercel
-2. Actualizar `config.ts` para leer de `process.env`
+### Firebase - Variables de Entorno (Recomendado para Producción)
+
+Para mayor seguridad en producción, configura estas variables de entorno en Vercel:
+
+**Variables requeridas:**
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=tu_api_key
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=tu_project_id
+NEXT_PUBLIC_FIREBASE_APP_ID=tu_app_id
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=tu_auth_domain
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=tu_sender_id
+```
+
+**Pasos en Vercel:**
+1. Ve a tu proyecto en Vercel Dashboard
+2. Settings → Environment Variables
+3. Agrega cada variable `NEXT_PUBLIC_FIREBASE_*`
+4. Selecciona: Production, Preview, Development
+5. Redeploy para aplicar cambios
+
+**Nota:** El proyecto funciona sin variables de entorno (usa valores por defecto), pero se recomienda configurarlas en producción.
 
 ### Build Settings en Vercel
 ```json
