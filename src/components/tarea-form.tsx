@@ -29,13 +29,21 @@ interface TareaFormProps {
   tareaInicial?: Tarea;
 }
 
+// Helper para convertir cualquier tipo de fecha a Date
+const convertToDate = (fecha: any): Date => {
+  if (fecha instanceof Date) return fecha;
+  if (fecha?.toDate) return fecha.toDate(); // Firestore Timestamp
+  if (typeof fecha === 'string' || typeof fecha === 'number') return new Date(fecha);
+  return new Date();
+};
+
 export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) {
   const form = useForm<TareaFormValues>({
     resolver: zodResolver(TareaFormSchema),
     defaultValues: tareaInicial ? {
       ...tareaInicial,
-      fechaInicio: new Date(tareaInicial.fechaInicio),
-      fechaTermino: new Date(tareaInicial.fechaTermino),
+      fechaInicio: convertToDate(tareaInicial.fechaInicio),
+      fechaTermino: convertToDate(tareaInicial.fechaTermino),
     } : {
       tarea: '',
       prioridad: 'media',
@@ -49,8 +57,8 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     if (tareaInicial) {
       form.reset({
         ...tareaInicial,
-        fechaInicio: new Date(tareaInicial.fechaInicio),
-        fechaTermino: new Date(tareaInicial.fechaTermino),
+        fechaInicio: convertToDate(tareaInicial.fechaInicio),
+        fechaTermino: convertToDate(tareaInicial.fechaTermino),
       });
     } else {
       form.reset({
