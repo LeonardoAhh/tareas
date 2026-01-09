@@ -29,6 +29,7 @@ export function PomodoroTimer() {
     const [sessions, setSessions] = useState(0);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const notificationShownRef = useRef(false);
+    const isUpdatingFromFirestore = useRef(false);
 
     // Sync state with Firestore - Real-time listener
     useEffect(() => {
@@ -40,6 +41,10 @@ export function PomodoroTimer() {
         const unsubscribe = onSnapshot(pomodoroDoc, (snapshot) => {
             if (snapshot.exists()) {
                 const state = snapshot.data() as PomodoroState;
+
+                // Mark that we're updating from Firestore to prevent save loop
+                isUpdatingFromFirestore.current = true;
+
                 setMode(state.mode || 'work');
                 setSessions(state.sessions || 0);
 
@@ -52,7 +57,9 @@ export function PomodoroTimer() {
                         setTimeLeft(remaining);
                         setIsRunning(true);
                     } else {
-                        handleTimerComplete(state.mode);
+                        // Timer finished
+                        setIsRunning(false);
+                        setEndTime(null);
                         setTimeLeft(state.mode === 'work' ? BREAK_TIME : WORK_TIME);
                     }
                 } else {
@@ -60,15 +67,20 @@ export function PomodoroTimer() {
                     setEndTime(null);
                     setTimeLeft(state.mode === 'work' ? WORK_TIME : BREAK_TIME);
                 }
+
+                // Reset flag after state updates
+                setTimeout(() => {
+                    isUpdatingFromFirestore.current = false;
+                }, 100);
             }
         });
 
         return () => unsubscribe();
     }, [firestore, user]);
 
-    // Save state to Firestore
+    // Save state to Firestore (only when changed locally, not from Firestore)
     useEffect(() => {
-        if (!firestore || !user) return;
+        if (!firestore || !user || isUpdatingFromFirestore.current) return;
 
         const pomodoroDoc = doc(firestore, 'users', user.uid, 'settings', 'pomodoro');
         const state: PomodoroState = { mode, endTime, sessions, isRunning };
