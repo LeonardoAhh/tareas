@@ -58,6 +58,8 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal';
 import { PomodoroTimer } from '@/components/pomodoro-timer';
 import { ProductivityChart } from '@/components/productivity-chart';
+import { SettingsModal } from '@/components/settings-modal';
+import { useReminders } from '@/hooks/use-reminders';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -482,6 +484,7 @@ export default function InicioPage() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
+              <SettingsModal />
               <PulsatingButton
                 onClick={handleLogout}
                 className="h-9 w-9 sm:h-10 sm:w-10 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg p-0"
