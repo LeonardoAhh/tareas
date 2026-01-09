@@ -30,6 +30,10 @@ const TareaBaseSchema = z.object({
   fechaInicio: z.date(),
   fechaTermino: z.date(),
   status: z.enum(['pendiente', 'en-progreso', 'completada']).default('pendiente'),
+  recordatorio: z.object({
+    fecha: z.date(),
+    enviado: z.boolean().default(false),
+  }).optional(),
 });
 
 export const TareaFormSchema = TareaBaseSchema.omit({ status: true }).refine(data => data.fechaTermino >= data.fechaInicio, {

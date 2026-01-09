@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { ReminderInput } from '@/components/reminder-input';
 import {
   Select,
   SelectContent,
@@ -38,7 +39,6 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
     } : {
       tarea: '',
       prioridad: 'media',
-      estado: 'pendiente',
       fechaInicio: new Date(),
       fechaTermino: new Date(),
     },
@@ -56,7 +56,6 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
       form.reset({
         tarea: '',
         prioridad: 'media',
-        estado: 'pendiente',
         fechaInicio: new Date(),
         fechaTermino: new Date(),
       });
@@ -69,7 +68,6 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
       form.reset({
         tarea: '',
         prioridad: 'media',
-        estado: 'pendiente',
         fechaInicio: new Date(),
         fechaTermino: new Date(),
       });
@@ -175,6 +173,24 @@ export function TareaForm({ onSubmit, onCancel, tareaInicial }: TareaFormProps) 
             )}
           />
         </div>
+
+        {/* Recordatorio */}
+        <FormField
+          control={form.control}
+          name="recordatorio"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <ReminderInput
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="flex justify-end gap-2 sm:gap-4 pt-2">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
