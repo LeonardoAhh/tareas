@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useFirebase, useUser } from '@/firebase/provider';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 type PomodoroMode = 'work' | 'break';
 
@@ -12,12 +14,14 @@ const BREAK_TIME = 15 * 60; // 15 minutes in seconds
 
 interface PomodoroState {
     mode: PomodoroMode;
-    endTime: number | null; // Timestamp when timer should finish
+    endTime: number | null;
     sessions: number;
     isRunning: boolean;
 }
 
 export function PomodoroTimer() {
+    const { firestore } = useFirebase();
+    const { user } = useUser();
     const [mode, setMode] = useState<PomodoroMode>('work');
     const [endTime, setEndTime] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState(WORK_TIME);
@@ -26,58 +30,60 @@ export function PomodoroTimer() {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const notificationShownRef = useRef(false);
 
-    // Load state from localStorage and check if timer completed while away
+    // Sync state with Firestore - Real-time listener
     useEffect(() => {
-        const saved = localStorage.getItem('pomodoro-state');
-        if (saved) {
-            try {
-                const state: PomodoroState = JSON.parse(saved);
+        if (!firestore || !user) return;
+
+        const pomodoroDoc = doc(firestore, 'users', user.uid, 'settings', 'pomodoro');
+
+        // Listen to changes from other devices
+        const unsubscribe = onSnapshot(pomodoroDoc, (snapshot) => {
+            if (snapshot.exists()) {
+                const state = snapshot.data() as PomodoroState;
                 setMode(state.mode || 'work');
                 setSessions(state.sessions || 0);
 
-                // Check if timer was running and calculate time left
                 if (state.isRunning && state.endTime) {
                     const now = Date.now();
                     const remaining = Math.max(0, Math.floor((state.endTime - now) / 1000));
 
                     if (remaining > 0) {
-                        // Timer still running
                         setEndTime(state.endTime);
                         setTimeLeft(remaining);
                         setIsRunning(true);
                     } else {
-                        // Timer finished while app was closed!
                         handleTimerComplete(state.mode);
                         setTimeLeft(state.mode === 'work' ? BREAK_TIME : WORK_TIME);
                     }
                 } else {
-                    // Timer was paused
+                    setIsRunning(false);
+                    setEndTime(null);
                     setTimeLeft(state.mode === 'work' ? WORK_TIME : BREAK_TIME);
                 }
-            } catch (e) {
-                console.error('Error loading pomodoro state:', e);
             }
-        }
-    }, []);
+        });
 
-    // Save state to localStorage whenever it changes
+        return () => unsubscribe();
+    }, [firestore, user]);
+
+    // Save state to Firestore
     useEffect(() => {
-        const state: PomodoroState = {
-            mode,
-            endTime,
-            sessions,
-            isRunning,
-        };
-        localStorage.setItem('pomodoro-state', JSON.stringify(state));
-    }, [mode, endTime, sessions, isRunning]);
+        if (!firestore || !user) return;
 
-    // Timer logic - check every second
+        const pomodoroDoc = doc(firestore, 'users', user.uid, 'settings', 'pomodoro');
+        const state: PomodoroState = { mode, endTime, sessions, isRunning };
+
+        setDoc(pomodoroDoc, state, { merge: true }).catch((err) =>
+            console.error('Error saving pomodoro:', err)
+        );
+    }, [mode, endTime, sessions, isRunning, firestore, user]);
+
+    // Timer tick
     useEffect(() => {
         if (isRunning && endTime) {
             intervalRef.current = setInterval(() => {
                 const now = Date.now();
                 const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-
                 setTimeLeft(remaining);
 
                 if (remaining === 0 && !notificationShownRef.current) {
@@ -86,15 +92,11 @@ export function PomodoroTimer() {
                 }
             }, 1000);
         } else {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         }
 
         return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [isRunning, endTime, mode]);
 
@@ -102,7 +104,6 @@ export function PomodoroTimer() {
         setIsRunning(false);
         setEndTime(null);
 
-        // Send browser notification
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(
                 completedMode === 'work' ? '¡Tiempo de descanso! 🎉' : '¡A trabajar! 💪',
@@ -111,13 +112,12 @@ export function PomodoroTimer() {
                         ? 'Has completado 9 horas de trabajo. Toma un descanso de 15 minutos.'
                         : 'Descanso terminado. Es hora de volver al trabajo.',
                     icon: '/icon-192x192.png',
-                    requireInteraction: true, // Notification stays until user interacts
-                    tag: 'pomodoro-timer', // Replace previous notifications
+                    requireInteraction: true,
+                    tag: 'pomodoro-timer',
                 }
             );
         }
 
-        // Switch mode
         if (completedMode === 'work') {
             setSessions((prev) => prev + 1);
             setMode('break');
@@ -127,19 +127,17 @@ export function PomodoroTimer() {
             setTimeLeft(WORK_TIME);
         }
 
-        // Reset notification flag after a delay
         setTimeout(() => {
             notificationShownRef.current = false;
         }, 2000);
     };
 
     const toggleTimer = () => {
-        // Request notification permission on first interaction
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
                     new Notification('¡Notificaciones activadas! 🔔', {
-                        body: 'Te avisaremos cuando termine el temporizador, incluso si cierras la app.',
+                        body: 'Te avisaremos cuando termine el temporizador.',
                         icon: '/icon-192x192.png',
                     });
                 }
@@ -147,14 +145,12 @@ export function PomodoroTimer() {
         }
 
         if (!isRunning) {
-            // Start timer - calculate end time
             const duration = mode === 'work' ? WORK_TIME : BREAK_TIME;
             const newEndTime = Date.now() + (duration * 1000);
             setEndTime(newEndTime);
             setIsRunning(true);
             notificationShownRef.current = false;
         } else {
-            // Pause timer
             setIsRunning(false);
             setEndTime(null);
         }
@@ -224,7 +220,6 @@ export function PomodoroTimer() {
                     {mode === 'work' ? '9 horas de trabajo' : '15 min de descanso'}
                 </p>
 
-                {/* Progress bar */}
                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                     <div
                         className={cn(
@@ -237,7 +232,7 @@ export function PomodoroTimer() {
 
                 {isRunning && (
                     <p className="text-xs text-center text-muted-foreground mt-2">
-                        🔔 Funciona en segundo plano
+                        🌐 Sincronizado en todos tus dispositivos
                     </p>
                 )}
             </div>
