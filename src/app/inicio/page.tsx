@@ -56,6 +56,8 @@ import { useRouter } from 'next/navigation';
 import { triggerConfetti } from '@/lib/confetti';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal';
+import { PomodoroTimer } from '@/components/pomodoro-timer';
+import { ProductivityChart } from '@/components/productivity-chart';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -545,6 +547,12 @@ export default function InicioPage() {
 
       {/* Main Content - Responsive */}
       <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 max-w-7xl">
+        {/* Pomodoro Timer & Productivity Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 md:mb-8">
+          <PomodoroTimer />
+          <ProductivityChart tareas={formattedTareas} days={7} />
+        </div>
+
         {/* Task Form - Responsive */}
         <Accordion
           type="single"
