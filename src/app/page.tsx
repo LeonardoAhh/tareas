@@ -73,16 +73,14 @@ export default function Home() {
         <div className="w-full max-w-md mx-auto lg:mx-0">
           {/* Mobile App Icon */}
           <div className="flex justify-center mb-8 lg:hidden">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary to-primary/70 shadow-2xl shadow-primary/25">
-              <CheckCircle2 className="h-10 w-10 text-white" strokeWidth={2.5} />
-            </div>
+            <TaskIcon size={80} />
           </div>
 
           {/* Mobile Title */}
           <div className="text-center mb-8 lg:hidden space-y-3">
-            <h1 className="text-3xl font-bold tracking-tight">Tareas</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Task Manager</h1>
             <p className="text-muted-foreground text-base px-4">
-              Organiza tu vida de forma simple
+              Gestiona tus tareas de forma eficiente
             </p>
           </div>
 
