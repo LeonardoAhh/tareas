@@ -60,6 +60,7 @@ import { PomodoroTimer } from '@/components/pomodoro-timer';
 import { ProductivityChart } from '@/components/productivity-chart';
 import { SettingsModal } from '@/components/settings-modal';
 import { useReminders } from '@/hooks/use-reminders';
+import { WelcomeMessage } from '@/components/welcome-message';
 
 type TareaFirestore = Omit<Tarea, 'fechaInicio' | 'fechaTermino'> & {
   fechaInicio: Timestamp;
@@ -496,6 +497,9 @@ export default function InicioPage() {
               </PulsatingButton>
             </div>
           </div>
+
+          {/* Welcome Message */}
+          <WelcomeMessage />
 
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-2">
