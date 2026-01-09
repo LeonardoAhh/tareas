@@ -54,8 +54,6 @@ import { PulsatingButton } from '@/components/ui/pulsating-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useRouter } from 'next/navigation';
 import { triggerConfetti } from '@/lib/confetti';
-import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
-import { KeyboardShortcutsModal } from '@/components/keyboard-shortcuts-modal';
 import { PomodoroTimer } from '@/components/pomodoro-timer';
 import { ProductivityChart } from '@/components/productivity-chart';
 import { SettingsModal } from '@/components/settings-modal';
@@ -247,35 +245,6 @@ export default function InicioPage() {
     setSearchTerm('');
     setFilterPriority('all');
   };
-
-  // Keyboard Shortcuts
-  useKeyboardShortcuts([
-    {
-      key: 'n',
-      callback: () => {
-        const accordionTrigger = document.querySelector('[data-state]') as HTMLButtonElement;
-        if (accordionTrigger) {
-          accordionTrigger.click();
-        }
-      },
-      description: 'Nueva tarea',
-    },
-    {
-      key: '/',
-      callback: () => {
-        searchInputRef.current?.focus();
-      },
-      description: 'Buscar tareas',
-    },
-    {
-      key: '?',
-      shiftKey: true,
-      callback: () => {
-        setShowShortcutsModal((prev) => !prev);
-      },
-      description: 'Mostrar ayuda',
-    },
-  ]);
 
 
   // Drag & Drop Handlers
@@ -630,12 +599,6 @@ export default function InicioPage() {
           )}
         </div>
       </main>
-
-      {/* Keyboard Shortcuts Modal */}
-      <KeyboardShortcutsModal
-        open={showShortcutsModal}
-        onOpenChange={setShowShortcutsModal}
-      />
     </div>
   );
 }
