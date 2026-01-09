@@ -121,5 +121,16 @@ service cloud.firestore {
       allow update: if isExistingOwner(userId) && hasValidTaskDataForUpdate();
       allow delete: if isExistingOwner(userId);
     }
+
+    /**
+     * @description Controls access to user settings (Pomodoro timer, preferences, etc.)
+     * @path /users/{userId}/settings/{settingId}
+     * @allow (read/write) A signed-in user accessing their own settings
+     * @principle Settings are user-specific and follow same ownership model as tasks
+     */
+    match /users/{userId}/settings/{settingId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId);
+    }
   }
 }
