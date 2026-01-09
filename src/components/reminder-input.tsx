@@ -11,15 +11,24 @@ interface ReminderInputProps {
     onChange: (reminder: { fecha: Date; enviado: boolean } | null) => void;
 }
 
+// Helper para convertir cualquier tipo de fecha a Date
+const convertToDate = (fecha: any): Date => {
+    if (fecha instanceof Date) return fecha;
+    if (fecha?.toDate) return fecha.toDate(); // Firestore Timestamp
+    if (typeof fecha === 'string' || typeof fecha === 'number') return new Date(fecha);
+    return new Date();
+};
+
 export function ReminderInput({ value, onChange }: ReminderInputProps) {
     const [showInput, setShowInput] = useState(!!value);
 
-    const formatDateTimeLocal = (date: Date): string => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
+    const formatDateTimeLocal = (date: any): string => {
+        const dateObj = convertToDate(date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     };
 
