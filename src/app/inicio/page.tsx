@@ -98,7 +98,6 @@ export default function InicioPage() {
   const [filterPriority, setFilterPriority] = useState<'all' | 'alta' | 'media' | 'baja'>('all');
   const [draggedTask, setDraggedTask] = useState<Tarea | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<TareaStatus | null>(null);
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const tasksCollection = useMemoFirebase(() => {
@@ -142,6 +141,7 @@ export default function InicioPage() {
         prioridad: tareaActualizada.prioridad,
         fechaInicio: tareaActualizada.fechaInicio,
         fechaTermino: tareaActualizada.fechaTermino,
+        recordatorio: tareaActualizada.recordatorio || null,
       });
 
       setEditingTask(null);
