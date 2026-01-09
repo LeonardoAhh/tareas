@@ -17,57 +17,55 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
-/** Initiate email/password sign-up (non-blocking). */
+/** Initiate email/password sign-up (returns Promise for error handling). */
 export function initiateEmailSignUp(
   authInstance: Auth,
   email: string,
   password: string,
   profileData: { firstName: string; lastName: string }
-): void {
-  createUserWithEmailAndPassword(authInstance, email, password)
+): Promise<void> {
+  return createUserWithEmailAndPassword(authInstance, email, password)
     .then((userCredential) => {
       const user = userCredential.user;
       // After creating the user, update their profile
-      updateProfile(user, {
+      return updateProfile(user, {
         displayName: `${profileData.firstName} ${profileData.lastName}`,
-      });
+      }).then(() => {
+        // Then, create the user document in Firestore
+        const db = getFirestore(authInstance.app);
+        const userRef = doc(db, 'users', user.uid);
 
-      // Then, create the user document in Firestore
-      const db = getFirestore(authInstance.app);
-      const userRef = doc(db, 'users', user.uid);
-      
-      const userData = {
-        id: user.uid,
-        email: user.email,
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-      };
+        const userData = {
+          id: user.uid,
+          email: user.email,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+        };
 
-      setDoc(userRef, userData).catch((error) => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: userRef.path,
-            operation: 'create',
-            requestResourceData: userData,
-          })
-        );
+        return setDoc(userRef, userData).catch((error) => {
+          errorEmitter.emit(
+            'permission-error',
+            new FirestorePermissionError({
+              path: userRef.path,
+              operation: 'create',
+              requestResourceData: userData,
+            })
+          );
+          throw error;
+        });
       });
-    })
-    .catch((error) => {
-      // You might want to handle registration errors differently
-      // For now, we'll log them, but you could show a toast.
-      console.error('Error during sign-up:', error);
     });
 }
 
-/** Initiate email/password sign-in (non-blocking). */
+/** Initiate email/password sign-in (returns Promise for error handling). */
 export function initiateEmailSignIn(
   authInstance: Auth,
   email: string,
   password: string
-): void {
-  // CRITICAL: Call signInWithEmailAndPassword directly. Do NOT use 'await signInWithEmailAndPassword(...)'.
-  signInWithEmailAndPassword(authInstance, email, password);
-  // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
+): Promise<void> {
+  return signInWithEmailAndPassword(authInstance, email, password)
+    .then(() => {
+      // Sign in successful, return void
+      return;
+    });
 }

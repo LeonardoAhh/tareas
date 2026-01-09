@@ -54,30 +54,76 @@ export function LoginForm() {
     },
   });
 
-  const onLoginSubmit = (values: Login) => {
-    startTransition(() => {
-      initiateEmailSignIn(auth, values.email, values.password);
-      toast({
-        title: '✓ Iniciando sesión',
-        description: 'Bienvenido de vuelta',
-        duration: 2000,
-      });
-      router.push('/inicio');
+
+  const onLoginSubmit = async (values: Login) => {
+    startTransition(async () => {
+      try {
+        await initiateEmailSignIn(auth, values.email, values.password);
+        toast({
+          title: '✓ Iniciando sesión',
+          description: 'Bienvenido de vuelta',
+          duration: 2000,
+        });
+        router.push('/inicio');
+      } catch (error: any) {
+        // Handle Firebase auth errors
+        let errorMessage = 'Error al iniciar sesión';
+
+        if (error.code === 'auth/user-not-found') {
+          errorMessage = 'Usuario no registrado';
+        } else if (error.code === 'auth/wrong-password') {
+          errorMessage = 'Contraseña incorrecta';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'Correo electrónico inválido';
+        } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = 'Demasiados intentos. Intenta más tarde';
+        } else if (error.code === 'auth/invalid-credential') {
+          errorMessage = 'Credenciales incorrectas';
+        }
+
+        toast({
+          title: '✗ Error',
+          description: errorMessage,
+          variant: 'destructive',
+          duration: 4000,
+        });
+      }
     });
   };
 
-  const onRegisterSubmit = (values: Register) => {
-    startTransition(() => {
-      const { email, password, firstName, lastName } = values;
-      initiateEmailSignUp(auth, email, password, { firstName, lastName });
-      toast({
-        title: '✓ Cuenta creada',
-        description: 'Tu cuenta ha sido creada exitosamente',
-        duration: 2000,
-      });
-      router.push('/inicio');
+  const onRegisterSubmit = async (values: Register) => {
+    startTransition(async () => {
+      try {
+        const { email, password, firstName, lastName } = values;
+        await initiateEmailSignUp(auth, email, password, { firstName, lastName });
+        toast({
+          title: '✓ Cuenta creada',
+          description: 'Tu cuenta ha sido creada exitosamente',
+          duration: 2000,
+        });
+        router.push('/inicio');
+      } catch (error: any) {
+        // Handle Firebase auth errors
+        let errorMessage = 'Error al crear cuenta';
+
+        if (error.code === 'auth/email-already-in-use') {
+          errorMessage = 'Este correo ya está registrado';
+        } else if (error.code === 'auth/invalid-email') {
+          errorMessage = 'Correo electrónico inválido';
+        } else if (error.code === 'auth/weak-password') {
+          errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+        }
+
+        toast({
+          title: '✗ Error',
+          description: errorMessage,
+          variant: 'destructive',
+          duration: 4000,
+        });
+      }
     });
   };
+
 
   return (
     <Tabs defaultValue="login" className="w-full">
